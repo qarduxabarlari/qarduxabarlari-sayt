@@ -4,8 +4,7 @@
   "description": "QarDU Xabarlari ilmiy jurnali rasmiy veb-platformasi",
   "scripts": {
     "start": "node local-server.js",
-    "dev": "node local-server.js",
-    "build": "echo 'Static site ready'"
+    "dev": "node local-server.js"
   },
   "keywords": [
     "qardu",
