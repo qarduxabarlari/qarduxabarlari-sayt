@@ -1327,12 +1327,314 @@ let currentStreamSearch = '';
 /**
  * Render dynamic BirdsNZ-style auto-rotating carousel
  */
+
+// --- ADMIN & CAROUSEL & ARCHIVE STATE HELPERS ---
+function isAdminLoggedIn() {
+  try {
+    const rawUser = localStorage.getItem('qardu_user');
+    if (!rawUser) return false;
+    const user = JSON.parse(rawUser);
+    return !!(user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+  } catch (e) {
+    return false;
+  }
+}
+
+function getCarouselArticleKeys() {
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem('qardu_carousel_articles') || 'null');
+  } catch (e) {}
+
+  if (Array.isArray(saved) && saved.length > 0) {
+    const valid = saved.filter(id => ARTICLES[id] && !ARTICLES[id].isArchived);
+    if (valid.length > 0) {
+      return valid.slice(0, 10);
+    }
+  }
+
+  // Fallback default: up to 10 non-archived articles
+  const defaultKeys = Object.keys(ARTICLES)
+    .filter(id => ARTICLES[id] && !ARTICLES[id].isArchived)
+    .slice(0, 10);
+  try {
+    localStorage.setItem('qardu_carousel_articles', JSON.stringify(defaultKeys));
+  } catch (e) {}
+  return defaultKeys;
+}
+
+function setCarouselArticleKeys(keys) {
+  const clean = (keys || []).slice(0, 10);
+  localStorage.setItem('qardu_carousel_articles', JSON.stringify(clean));
+  renderCarousel();
+  updateAdminTabBadges();
+}
+
+function togglePinToCarousel(articleId) {
+  let keys = getCarouselArticleKeys();
+  if (keys.includes(articleId)) {
+    keys = keys.filter(id => id !== articleId);
+    setCarouselArticleKeys(keys);
+    showToast("Maqola Bosh paneldan olindi.");
+  } else {
+    if (keys.length >= 10) {
+      showToast("Bosh panelga ko'pi bilan 10 ta maqola qo'shish mumkin!");
+      return;
+    }
+    keys.push(articleId);
+    setCarouselArticleKeys(keys);
+    showToast("Maqola Bosh panelga (karuselga) muvaffaqiyatli qo'shildi!");
+  }
+  renderAdminCarouselList();
+  renderArticlesStream();
+}
+
+function archiveArticle(articleId) {
+  if (!ARTICLES[articleId]) return;
+  ARTICLES[articleId].isArchived = true;
+
+  // Remove from carousel if pinned
+  let carouselKeys = getCarouselArticleKeys();
+  if (carouselKeys.includes(articleId)) {
+    carouselKeys = carouselKeys.filter(id => id !== articleId);
+    setCarouselArticleKeys(carouselKeys);
+  }
+
+  // Save to localStorage
+  try {
+    const stored = JSON.parse(localStorage.getItem('qardu_custom_articles') || '[]');
+    const item = stored.find(x => x.id === articleId);
+    if (item) {
+      item.isArchived = true;
+    } else {
+      stored.unshift(ARTICLES[articleId]);
+    }
+    localStorage.setItem('qardu_custom_articles', JSON.stringify(stored));
+  } catch (e) {}
+
+  // Sync with Supabase if available
+  if (window.supabaseClient) {
+    try {
+      window.supabaseClient.from('articles')
+        .update({ is_archived: true })
+        .eq('id', articleId.replace('art-sb-', ''))
+        .then(() => {})
+        .catch(() => {});
+    } catch (e) {}
+  }
+
+  renderArticlesStream();
+  renderCarousel();
+  renderAdminCarouselList();
+  renderAdminArchiveList();
+  updateAdminTabBadges();
+  showToast("Maqola arxivlandi va umumiy oqimdan olindi.");
+}
+
+function restoreArticle(articleId) {
+  if (!ARTICLES[articleId]) return;
+  ARTICLES[articleId].isArchived = false;
+
+  try {
+    const stored = JSON.parse(localStorage.getItem('qardu_custom_articles') || '[]');
+    const item = stored.find(x => x.id === articleId);
+    if (item) {
+      item.isArchived = false;
+      localStorage.setItem('qardu_custom_articles', JSON.stringify(stored));
+    }
+  } catch (e) {}
+
+  if (window.supabaseClient) {
+    try {
+      window.supabaseClient.from('articles')
+        .update({ is_archived: false })
+        .eq('id', articleId.replace('art-sb-', ''))
+        .then(() => {})
+        .catch(() => {});
+    } catch (e) {}
+  }
+
+  renderArticlesStream();
+  renderCarousel();
+  renderAdminCarouselList();
+  renderAdminArchiveList();
+  updateAdminTabBadges();
+  showToast("Maqola qayta nashr qilindi!");
+}
+
+function deleteArticlePermanent(articleId) {
+  if (!confirm("Haqiqatan ham ushbu maqolani butunlay o'chirib tashlamoqchimisiz? Bu amalni qaytarib bo'lmaydi.")) {
+    return;
+  }
+
+  delete ARTICLES[articleId];
+
+  // Remove from localStorage
+  try {
+    const stored = JSON.parse(localStorage.getItem('qardu_custom_articles') || '[]');
+    const filtered = stored.filter(x => x.id !== articleId);
+    localStorage.setItem('qardu_custom_articles', JSON.stringify(filtered));
+  } catch (e) {}
+
+  // Remove from carousel
+  let carouselKeys = getCarouselArticleKeys();
+  if (carouselKeys.includes(articleId)) {
+    carouselKeys = carouselKeys.filter(id => id !== articleId);
+    setCarouselArticleKeys(carouselKeys);
+  }
+
+  // Remove from Supabase
+  if (window.supabaseClient) {
+    try {
+      window.supabaseClient.from('articles')
+        .delete()
+        .eq('id', articleId.replace('art-sb-', ''))
+        .then(() => {})
+        .catch(() => {});
+    } catch (e) {}
+  }
+
+  renderArticlesStream();
+  renderCarousel();
+  renderAdminCarouselList();
+  renderAdminArchiveList();
+  updateAdminTabBadges();
+  showToast("Maqola butunlay o'chirildi!");
+}
+
+function updateAdminTabBadges() {
+  const carouselKeys = getCarouselArticleKeys();
+  const archivedKeys = Object.keys(ARTICLES).filter(id => ARTICLES[id] && ARTICLES[id].isArchived);
+
+  const carouselCountEl = document.getElementById('adminCarouselTabCount');
+  if (carouselCountEl) carouselCountEl.textContent = `${carouselKeys.length}/10`;
+
+  const archiveCountEl = document.getElementById('adminArchiveTabCount');
+  if (archiveCountEl) archiveCountEl.textContent = `${archivedKeys.length}`;
+}
+
+function renderAdminCarouselList() {
+  const container = document.getElementById('adminCarouselListContainer');
+  const countBadge = document.getElementById('adminCarouselSummaryCount');
+  if (!container) return;
+
+  const carouselKeys = getCarouselArticleKeys();
+  if (countBadge) {
+    countBadge.textContent = `Bosh panelda: ${carouselKeys.length} / 10 ta tanlangan`;
+  }
+
+  const allActiveKeys = Object.keys(ARTICLES).filter(id => ARTICLES[id] && !ARTICLES[id].isArchived);
+
+  if (!allActiveKeys.length) {
+    container.innerHTML = '<div style="text-align: center; padding: 24px; color: #64748b;">Hozircha saytda faol maqolalar yo\'q.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  allActiveKeys.forEach(id => {
+    const art = ARTICLES[id];
+    const isPinned = carouselKeys.includes(id);
+    const title = (art.title && (art.title[currentLang] || art.title.uz)) || 'Nomsiz maqola';
+    const authors = (art.passport && art.passport.authorsText) || '';
+    const issue = (art.issue && (art.issue[currentLang] || art.issue.uz)) || '';
+
+    const card = document.createElement('div');
+    card.className = `admin-manage-card ${isPinned ? 'pinned' : ''}`;
+    card.innerHTML = `
+      <div class="admin-manage-card-info">
+        <h4 class="admin-manage-title">${title}</h4>
+        <div class="admin-manage-meta">
+          <span>✍️ ${authors}</span>
+          <span>•</span>
+          <span>📅 ${issue}</span>
+          ${isPinned ? '<span style="color: #0284c7; font-weight: 700;">★ Bosh panelda</span>' : ''}
+        </div>
+      </div>
+      <div class="admin-manage-actions">
+        <button type="button" class="btn-manage-pin ${isPinned ? 'active' : ''}" data-id="${id}">
+          ${isPinned ? '✓ Bosh paneldan olish' : '📌 Bosh panelga qo\'shish'}
+        </button>
+      </div>
+    `;
+
+    card.querySelector('.btn-manage-pin').addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePinToCarousel(id);
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function renderAdminArchiveList() {
+  const container = document.getElementById('adminArchiveListContainer');
+  if (!container) return;
+
+  const archivedKeys = Object.keys(ARTICLES).filter(id => ARTICLES[id] && ARTICLES[id].isArchived);
+  updateAdminTabBadges();
+
+  if (!archivedKeys.length) {
+    container.innerHTML = '<div style="text-align: center; padding: 32px 16px; color: #64748b; font-size: 0.95rem;">Arxivlangan maqolalar mavjud emas. Maqolalarni arxivlasangiz, ular bu yerda saqlanadi va qayta nashr etish mumkin bo\'ladi.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  archivedKeys.forEach(id => {
+    const art = ARTICLES[id];
+    const title = (art.title && (art.title[currentLang] || art.title.uz)) || 'Nomsiz maqola';
+    const authors = (art.passport && art.passport.authorsText) || '';
+    const issue = (art.issue && (art.issue[currentLang] || art.issue.uz)) || '';
+
+    const card = document.createElement('div');
+    card.className = 'admin-manage-card';
+    card.style.background = '#fffbeb';
+    card.style.borderColor = '#fde68a';
+    card.innerHTML = `
+      <div class="admin-manage-card-info">
+        <h4 class="admin-manage-title">${title}</h4>
+        <div class="admin-manage-meta">
+          <span>✍️ ${authors}</span>
+          <span>•</span>
+          <span>📅 ${issue}</span>
+          <span style="color: #b45309; font-weight: 700; background: #fef3c7; padding: 2px 6px; border-radius: 4px;">Arxivda</span>
+        </div>
+      </div>
+      <div class="admin-manage-actions">
+        <button type="button" class="btn-manage-restore" data-id="${id}" title="Maqolani yana saytga qaytarish">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          <span>Qayta chiqarish</span>
+        </button>
+        <button type="button" class="btn-manage-delete" data-id="${id}" title="Maqolani butunlay o'chirish">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span>O'chirish</span>
+        </button>
+      </div>
+    `;
+
+    card.querySelector('.btn-manage-restore').addEventListener('click', () => {
+      restoreArticle(id);
+    });
+
+    card.querySelector('.btn-manage-delete').addEventListener('click', () => {
+      deleteArticlePermanent(id);
+    });
+
+    container.appendChild(card);
+  });
+}
+
 function renderCarousel() {
   const container = document.getElementById('homeCarousel');
   const dotsContainer = document.getElementById('carouselDots');
   if (!container || !dotsContainer) return;
 
-  const articleKeys = Object.keys(ARTICLES);
+  const articleKeys = getCarouselArticleKeys();
   if (!articleKeys.length) {
     container.innerHTML = `
       <div class="c-homeCarousel__slide active" style="background: linear-gradient(135deg, #01243d, #013a5e); display: flex; align-items: center; justify-content: center;">
@@ -1384,7 +1686,7 @@ function renderCarousel() {
           <span>${dict.btnReadMore || "Batafsil o'qish →"}</span>
         </button>
       </div>
-      ${art.credit ? `<div class="thumbnailCredit">${art.credit}</div>` : ''}
+      
     `;
 
     slide.querySelector('.c-homeCarousel__slide--link').addEventListener('click', (e) => {
@@ -1469,6 +1771,7 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
 
   const filteredKeys = articleKeys.filter(key => {
     const art = ARTICLES[key];
+    if (!art || art.isArchived) return false;
     if (activeStreamCategory !== 'all') {
       if (art.categoryKey && art.categoryKey !== activeStreamCategory) {
         return false;
@@ -1652,15 +1955,19 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
 
 /**
  * Switch page view to Bosh sahifa (Home Page View)
+ * Note: Articles stream is NOT on home view; only Hero & Carousel and Contact
  */
 function showHomeView() {
+  currentActiveView = 'home';
   const homeView = document.getElementById('homeView');
+  const articlesView = document.getElementById('articlesView');
   const articleDetailView = document.getElementById('articleDetailView');
   const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
   const navItemHome = document.getElementById('navItemHome');
   const navItemArticles = document.getElementById('navItemArticles');
 
   if (homeView) homeView.style.display = 'block';
+  if (articlesView) articlesView.style.display = 'none';
   if (articleDetailView) articleDetailView.style.display = 'none';
   if (breadcrumbBanner) breadcrumbBanner.style.display = 'none';
 
@@ -1668,6 +1975,29 @@ function showHomeView() {
   if (navItemArticles) navItemArticles.classList.remove('active');
 
   renderCarousel();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * Switch page view to Maqolalar (Articles Section View)
+ */
+function showArticlesView() {
+  currentActiveView = 'articles';
+  const homeView = document.getElementById('homeView');
+  const articlesView = document.getElementById('articlesView');
+  const articleDetailView = document.getElementById('articleDetailView');
+  const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
+  const navItemHome = document.getElementById('navItemHome');
+  const navItemArticles = document.getElementById('navItemArticles');
+
+  if (homeView) homeView.style.display = 'none';
+  if (articlesView) articlesView.style.display = 'block';
+  if (articleDetailView) articleDetailView.style.display = 'none';
+  if (breadcrumbBanner) breadcrumbBanner.style.display = 'none';
+
+  if (navItemHome) navItemHome.classList.remove('active');
+  if (navItemArticles) navItemArticles.classList.add('active');
+
   renderArticlesStream();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1677,6 +2007,7 @@ function showHomeView() {
  */
 function showArticleDetailView(articleId) {
   const homeView = document.getElementById('homeView');
+  const articlesView = document.getElementById('articlesView');
   const articleDetailView = document.getElementById('articleDetailView');
   const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
   const navItemHome = document.getElementById('navItemHome');
@@ -1687,6 +2018,7 @@ function showArticleDetailView(articleId) {
   }
 
   if (homeView) homeView.style.display = 'none';
+  if (articlesView) articlesView.style.display = 'none';
   if (articleDetailView) articleDetailView.style.display = 'block';
   if (breadcrumbBanner) breadcrumbBanner.style.display = 'block';
 
@@ -2049,14 +2381,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnBackToHome?.addEventListener('click', (e) => {
     e.preventDefault();
-    showHomeView();
+    if (currentActiveView === 'home') {
+      showHomeView();
+    } else {
+      showArticlesView();
+    }
   });
 
   btnHeroBrowse?.addEventListener('click', (e) => {
     e.preventDefault();
-    showHomeView();
-    const streamSec = document.getElementById('articlesStreamSection');
-    streamSec?.scrollIntoView({ behavior: 'smooth' });
+    showArticlesView();
+  });
+
+  const navPublicationsLink = document.getElementById('navPublications');
+  navPublicationsLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showArticlesView();
+  });
+
+  const bcArticlesLink = document.getElementById('bcArticles');
+  bcArticlesLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showArticlesView();
   });
 
   // Category Filter Pills
@@ -2905,11 +3251,27 @@ ER  - `;
   const btnCancelContactAdmin = document.getElementById('btnCancelContactAdmin');
   const btnAdminEditContacts = document.getElementById('btnAdminEditContacts');
 
+  const adminTabBtnCarousel = document.getElementById('adminTabBtnCarousel');
+  const adminTabBtnArchive = document.getElementById('adminTabBtnArchive');
+  const adminPaneCarousel = document.getElementById('adminPaneCarousel');
+  const adminPaneArchive = document.getElementById('adminPaneArchive');
+
   function switchAdminTab(tabName) {
-    if (tabName === 'contact') {
-      adminTabBtnArticle?.classList.remove('active');
+    [adminTabBtnArticle, adminTabBtnCarousel, adminTabBtnArchive, adminTabBtnContact].forEach(b => b?.classList.remove('active'));
+    [adminPaneArticle, adminPaneCarousel, adminPaneArchive, adminPaneContact].forEach(p => {
+      if (p) p.style.display = 'none';
+    });
+
+    if (tabName === 'carousel') {
+      adminTabBtnCarousel?.classList.add('active');
+      if (adminPaneCarousel) adminPaneCarousel.style.display = 'block';
+      renderAdminCarouselList();
+    } else if (tabName === 'archive') {
+      adminTabBtnArchive?.classList.add('active');
+      if (adminPaneArchive) adminPaneArchive.style.display = 'block';
+      renderAdminArchiveList();
+    } else if (tabName === 'contact') {
       adminTabBtnContact?.classList.add('active');
-      if (adminPaneArticle) adminPaneArticle.style.display = 'none';
       if (adminPaneContact) adminPaneContact.style.display = 'block';
       const cur = getContactSettings();
       const inpTg = document.getElementById('adminContactTelegram');
@@ -2920,11 +3282,13 @@ ER  - `;
       if (inpPhone) inpPhone.value = cur.phone;
     } else {
       adminTabBtnArticle?.classList.add('active');
-      adminTabBtnContact?.classList.remove('active');
       if (adminPaneArticle) adminPaneArticle.style.display = 'block';
-      if (adminPaneContact) adminPaneContact.style.display = 'none';
     }
+    updateAdminTabBadges();
   }
+
+  adminTabBtnCarousel?.addEventListener('click', () => switchAdminTab('carousel'));
+  adminTabBtnArchive?.addEventListener('click', () => switchAdminTab('archive'));
 
   function openAdminModal(defaultTab = 'article') {
     if (!adminModal) return;
@@ -3332,9 +3696,7 @@ ER  - `;
 
   navPublications?.addEventListener('click', (e) => {
     e.preventDefault();
-    showHomeView();
-    const streamSec = document.getElementById('articlesStreamSection');
-    streamSec?.scrollIntoView({ behavior: 'smooth' });
+    showArticlesView();
   });
 
   bcArticles?.addEventListener('click', (e) => {
@@ -3466,10 +3828,23 @@ ER  - `;
   // Initial render & state restoration
   loadCustomArticles().then(() => {
     updateStaticTranslations();
-    showHomeView();
+    if (window.location.hash === '#articles' || window.location.hash === '#publications') {
+      showArticlesView();
+    } else {
+      showHomeView();
+    }
   }).catch(() => {
     updateStaticTranslations();
     showHomeView();
   });
+
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash === '#articles' || window.location.hash === '#publications') {
+      showArticlesView();
+    } else if (window.location.hash === '#home' || !window.location.hash) {
+      showHomeView();
+    }
+  });
+
   initSupabaseAuth();
 });
