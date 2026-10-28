@@ -1417,20 +1417,22 @@ function archiveArticle(articleId) {
   // Sync with Supabase if available
   if (window.supabaseClient) {
     try {
+      const cleanId = articleId.replace('art-sb-', '');
       window.supabaseClient.from('articles')
         .update({ is_archived: true })
-        .eq('id', articleId.replace('art-sb-', ''))
-        .then(() => {})
-        .catch(() => {});
+        .eq('id', cleanId)
+        .then(({ error }) => {
+          if (error) console.warn("Supabase archive error:", error.message);
+        })
+        .catch(err => console.warn("Supabase archive catch:", err));
     } catch (e) {}
   }
 
   renderArticlesStream();
+  renderArchiveStream();
   renderCarousel();
-  renderAdminCarouselList();
-  renderAdminArchiveList();
   updateAdminTabBadges();
-  showToast("Maqola arxivlandi va umumiy oqimdan olindi.");
+  showToast("Maqola arxivlandi va Arxiv bo'limiga o'tkazildi!");
 }
 
 function restoreArticle(articleId) {
@@ -1448,20 +1450,22 @@ function restoreArticle(articleId) {
 
   if (window.supabaseClient) {
     try {
+      const cleanId = articleId.replace('art-sb-', '');
       window.supabaseClient.from('articles')
         .update({ is_archived: false })
-        .eq('id', articleId.replace('art-sb-', ''))
-        .then(() => {})
-        .catch(() => {});
+        .eq('id', cleanId)
+        .then(({ error }) => {
+          if (error) console.warn("Supabase restore error:", error.message);
+        })
+        .catch(err => console.warn("Supabase restore catch:", err));
     } catch (e) {}
   }
 
   renderArticlesStream();
+  renderArchiveStream();
   renderCarousel();
-  renderAdminCarouselList();
-  renderAdminArchiveList();
   updateAdminTabBadges();
-  showToast("Maqola qayta nashr qilindi!");
+  showToast("Maqola qayta nashr qilindi va oqimga qaytarildi!");
 }
 
 function deleteArticlePermanent(articleId) {
@@ -1488,18 +1492,20 @@ function deleteArticlePermanent(articleId) {
   // Remove from Supabase
   if (window.supabaseClient) {
     try {
+      const cleanId = articleId.replace('art-sb-', '');
       window.supabaseClient.from('articles')
         .delete()
-        .eq('id', articleId.replace('art-sb-', ''))
-        .then(() => {})
-        .catch(() => {});
+        .eq('id', cleanId)
+        .then(({ error }) => {
+          if (error) console.warn("Supabase delete error:", error.message);
+        })
+        .catch(err => console.warn("Supabase delete catch:", err));
     } catch (e) {}
   }
 
   renderArticlesStream();
+  renderArchiveStream();
   renderCarousel();
-  renderAdminCarouselList();
-  renderAdminArchiveList();
   updateAdminTabBadges();
   showToast("Maqola butunlay o'chirildi!");
 }
@@ -3700,30 +3706,41 @@ ER  - `;
         references: []
       };
 
-      // 1. Try to save into Supabase database (if configured)
+      // 1. Try to save into Supabase database (with dual compatibility)
       if (window.supabaseClient) {
         try {
-          const { error } = await window.supabaseClient.from('articles').insert([{
+          const sbRecord = {
+            id: newId,
             title: title,
+            title_uz: title,
             authors: authors,
             pub_type: pubType,
             pub_year: parseInt(pubYear) || new Date().getFullYear(),
             vol_issue: volIssue,
             pagination: pagination,
             article_type: articleType,
-            doi: doi,
-            udc: udc,
+            doi: doi || `https://doi.org/10.59272/qardu.${pubYear}.admin.${Date.now().toString().slice(-4)}`,
+            udc: udc || '',
             keywords: keywords,
+            keywords_uz: Array.isArray(keywords) ? keywords : [keywords],
             abstract: abstract,
+            abstract_uz: abstract,
             file_url: fileUrl,
+            pdf_url: fileUrl,
             file_name: fileName,
+            cover_url: coverImageUrl || null,
+            cover_image: coverImageUrl || null,
+            is_archived: false,
             created_at: new Date().toISOString()
-          }]);
+          };
+          const { error } = await window.supabaseClient.from('articles').insert([sbRecord]);
           if (error) {
-            console.warn('Supabase insert note (cached locally in browser):', error.message);
+            console.warn('Supabase insert notice (RLS or column):', error.message);
+          } else {
+            console.log('Article successfully saved to Supabase database!');
           }
         } catch (sbErr) {
-          console.warn('Supabase insert exception (cached locally in browser):', sbErr);
+          console.warn('Supabase insert exception:', sbErr);
         }
       }
 
@@ -3894,12 +3911,10 @@ ER  - `;
 
   // Helper to detect test articles
   function isTestArticle(item) {
-    if (!item) return true;
-    const t = ((item.title && (item.title.uz || item.title)) || '').toLowerCase();
+    if (!item) return false;
     const d = ((item.passport && item.passport.doi) || item.doi || '').toLowerCase();
     const a = ((item.abstract && (item.abstract.uz || item.abstract)) || '').toLowerCase();
-    const auth = ((item.passport && item.passport.authorsText) || item.authors || '').toLowerCase();
-    return t.includes('suniy intellekt') || d.includes('cewrcwec') || a.includes('weecwecwe') || auth.includes('umid dilmurodov');
+    return d.includes('cewrcwec') || a.includes('weecwecwe');
   }
 
   // Load custom stored articles from localStorage and Supabase
@@ -3937,44 +3952,48 @@ ER  - `;
         if (!error && data && data.length) {
           data.forEach(row => {
             if (isTestArticle(row)) return;
-            const rowId = `art-sb-${row.id}`;
-            if (!ARTICLES[rowId]) {
-              const kw = Array.isArray(row.keywords) ? row.keywords : (row.keywords ? String(row.keywords).split(',').map(s => s.trim()) : []);
-              ARTICLES[rowId] = {
-                id: rowId,
-                category: { uz: row.article_type || 'Ilmiy maqola', ru: row.article_type || 'Научная статья', en: row.article_type || 'Research Article' },
-                title: { uz: row.title, ru: row.title, en: row.title },
-                pubDate: { uz: `${row.pub_year}-yil`, ru: `${row.pub_year} г.`, en: `${row.pub_year}` },
-                issue: { uz: `${row.pub_year}-yil, ${row.vol_issue || '2-son'}`, ru: `${row.pub_year} г., ${row.vol_issue || '2-й выпуск'}`, en: `${row.pub_year}, ${row.vol_issue || 'Issue 2'}` },
-                passport: {
-                  pubType: { uz: row.pub_type || 'Jurnal maqolasi', ru: row.pub_type || 'Статья в журнале', en: row.pub_type || 'Journal Article' },
-                  pubYear: String(row.pub_year),
-                  authorsText: row.authors,
-                  journalName: { uz: 'QarDU Xabarlari', ru: 'Вестник КарГУ', en: 'Bulletin of KarSU' },
-                  volumeIssue: row.vol_issue || '74, 2',
-                  pagination: row.pagination || '1-10',
-                  articleType: { uz: row.article_type || 'Ilmiy maqola', ru: row.article_type || 'Научная статья', en: row.article_type || 'Research Article' },
-                  doi: row.doi || '',
-                  udc: row.udc || '',
-                  fileSize: row.file_name ? 'PDF fayl' : '1.8 MB',
-                  fileUrl: row.file_url || null,
-                  fileName: row.file_name || null
-                },
-                keywords: { uz: kw, ru: kw, en: kw },
-                abstract: { uz: row.abstract, ru: row.abstract, en: row.abstract },
-                coverImage: row.cover_image || row.cover_url || null,
-                slideImage: row.cover_image || row.cover_url || null,
-                metrics: { views: 1, downloads: 0, citations: 0 },
-                authors: [{
-                  name: { uz: row.authors, ru: row.authors, en: row.authors },
-                  degree: { uz: '', ru: '', en: '' },
-                  affiliation: { uz: 'Qarshi Davlat Universiteti', ru: 'Каршинский государственный университет', en: 'Karshi State University' },
-                  orcid: '',
-                  email: ''
-                }],
-                references: []
-              };
-            }
+            const rowId = row.id ? (row.id.startsWith('art-') ? row.id : `art-sb-${row.id}`) : `art-sb-${Date.now()}`;
+            const artTitle = row.title || row.title_uz || 'Ilmiy maqola';
+            const artAbstract = row.abstract || row.abstract_uz || '';
+            const artAuthors = row.authors || (row.authors_data ? (Array.isArray(row.authors_data) ? row.authors_data.map(a => a.name || a).join(', ') : String(row.authors_data)) : 'Muallif');
+            const kw = Array.isArray(row.keywords) ? row.keywords : (row.keywords_uz || (row.keywords ? String(row.keywords).split(',').map(s => s.trim()) : []));
+            const y = row.pub_year || new Date().getFullYear();
+
+            ARTICLES[rowId] = {
+              id: rowId,
+              isArchived: !!row.is_archived,
+              category: { uz: row.article_type || 'Ilmiy maqola', ru: row.article_type || 'Научная статья', en: row.article_type || 'Research Article' },
+              title: { uz: artTitle, ru: artTitle, en: artTitle },
+              pubDate: { uz: `${y}-yil`, ru: `${y} г.`, en: `${y}` },
+              issue: { uz: `${y}-yil, ${row.vol_issue || '2-son'}`, ru: `${y} г., ${row.vol_issue || '2-й выпуск'}`, en: `${y}, ${row.vol_issue || 'Issue 2'}` },
+              passport: {
+                pubType: { uz: row.pub_type || 'Jurnal maqolasi', ru: row.pub_type || 'Статья в журнале', en: row.pub_type || 'Journal Article' },
+                pubYear: String(y),
+                authorsText: artAuthors,
+                journalName: { uz: 'QarDU Xabarlari', ru: 'Вестник КарГУ', en: 'Bulletin of KarSU' },
+                volumeIssue: row.vol_issue || '74, 2',
+                pagination: row.pagination || '1-10',
+                articleType: { uz: row.article_type || 'Ilmiy maqola', ru: row.article_type || 'Научная статья', en: row.article_type || 'Research Article' },
+                doi: row.doi || '',
+                udc: row.udc || '',
+                fileSize: row.file_name ? 'PDF fayl' : '1.8 MB',
+                fileUrl: row.file_url || row.pdf_url || null,
+                fileName: row.file_name || null
+              },
+              keywords: { uz: kw, ru: kw, en: kw },
+              abstract: { uz: artAbstract, ru: artAbstract, en: artAbstract },
+              coverImage: row.cover_image || row.cover_url || null,
+              slideImage: row.cover_image || row.cover_url || null,
+              metrics: { views: 1, downloads: 0, citations: 0 },
+              authors: [{
+                name: { uz: artAuthors, ru: artAuthors, en: artAuthors },
+                degree: { uz: '', ru: '', en: '' },
+                affiliation: { uz: 'Qarshi Davlat Universiteti', ru: 'Каршинский государственный университет', en: 'Karshi State University' },
+                orcid: '',
+                email: ''
+              }],
+              references: []
+            };
           });
           renderArticle();
         }
@@ -3986,6 +4005,8 @@ ER  - `;
     renderArticle();
     renderCarousel();
     renderArticlesStream();
+    renderArchiveStream();
+    updateAdminTabBadges();
   }
 
   function checkHashRoute() {
