@@ -4594,3 +4594,178 @@ a:hover {
   transition: all 0.18s ease;
   border: 1px solid transparent;
 }
+
+
+/* ======================================================== */
+/* ADMIN CONTROLS ON ARTICLE CARDS & NAV BAR                */
+/* ======================================================== */
+.article-stream-admin-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin-top: 14px;
+  margin-bottom: 2px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+}
+
+.article-stream-admin-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  letter-spacing: 0.02em;
+}
+
+.article-stream-admin-label svg {
+  color: #0284c7;
+}
+
+.article-stream-admin-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-card-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  background: #ffffff;
+}
+
+/* Pin to carousel button */
+.btn-card-pin {
+  color: #0369a1;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+.btn-card-pin:hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0284c7;
+}
+.btn-card-pin.is-pinned {
+  color: #ffffff;
+  background: #0284c7;
+  border-color: #0284c7;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.3);
+}
+.btn-card-pin.is-pinned:hover {
+  background: #0369a1;
+  border-color: #0369a1;
+}
+
+/* Archive button */
+.btn-card-archive {
+  color: #b45309;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+.btn-card-archive:hover {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+/* Delete button */
+.btn-card-delete {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.btn-card-delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+/* Restore button */
+.btn-card-restore {
+  color: #166534;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+.btn-card-restore:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+/* Pinned pill inside article meta */
+.article-pinned-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 9999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+/* Navbar Admin badge */
+.nav-admin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: 6px;
+  background: #f59e0b;
+  color: #ffffff;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Contacts Settings View Card */
+.admin-contacts-card-container {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  max-width: 760px;
+  margin: 0 auto 40px auto;
+}
+
+.admin-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.admin-submit-btn:hover {
+  background: #0b2240;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 37, 66, 0.2);
+}

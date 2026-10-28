@@ -25,6 +25,8 @@ const I18N = {
     navAuthors: "Mualliflarga",
     navIndexing: "Indekslanish",
     navContact: "Aloqa",
+    navContacts: "Aloqa sozlamalari",
+    archiveViewTitle: "Arxivlangan maqolalar",
     bcHome: "Bosh sahifa",
     bcArticles: "Maqolalar",
     passportHeading: "Maqola pasporti",
@@ -1823,6 +1825,8 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
 
   filteredKeys.forEach(key => {
     const art = ARTICLES[key];
+    const isPinned = getCarouselArticleKeys().includes(key);
+    const isAdmin = isAdminLoggedIn();
     const catText = (art.category && (art.category[currentLang] || art.category.uz)) || 'Ilmiy maqola';
     const titleText = (art.title && (art.title[currentLang] || art.title.uz)) || '';
     const authorText = (art.passport && art.passport.authorsText) || '';
@@ -1852,6 +1856,7 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
         <span>•</span>
         <span>${pubYearText}</span>
         ${doiText ? `<span>•</span><span class="article-stream-doi">DOI: ${doiText.replace('https://doi.org/', '')}</span>` : ''}
+        ${isPinned ? '<span class="article-pinned-pill">📌 Bosh panelda</span>' : ''}
       </div>
 
       <h3 class="article-stream-title">${titleText}</h3>
@@ -1912,7 +1917,64 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
           </button>
         </div>
       </div>
+
+      ${isAdmin ? `
+        <div class="article-stream-admin-bar">
+          <div class="article-stream-admin-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+            </svg>
+            <span>Admin boshqaruvi:</span>
+          </div>
+          <div class="article-stream-admin-buttons">
+            <button type="button" class="btn-card-admin btn-card-pin ${isPinned ? 'is-pinned' : ''}" data-id="${key}" title="${isPinned ? 'Bosh paneldan olish' : 'Bosh sahifadagi suzuvchi panelga qadash'}">
+              ${isPinned ? `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span>Qadashni bekor qilish</span>
+              ` : `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+                </svg>
+                <span>Bosh panelga qadash</span>
+              `}
+            </button>
+            <button type="button" class="btn-card-admin btn-card-archive" data-id="${key}" title="Ushbu maqolani arxivlash">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                <rect x="1" y="3" width="22" height="5"></rect>
+                <line x1="10" y1="12" x2="14" y2="12"></line>
+              </svg>
+              <span>Arxivlash</span>
+            </button>
+            <button type="button" class="btn-card-admin btn-card-delete" data-id="${key}" title="Maqolani butunlay o'chirish">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>O'chirish</span>
+            </button>
+          </div>
+        </div>
+      ` : ''}
     `;
+
+    if (isAdmin) {
+      card.querySelector('.btn-card-pin')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePinToCarousel(key);
+      });
+      card.querySelector('.btn-card-archive')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        archiveArticle(key);
+      });
+      card.querySelector('.btn-card-delete')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteArticlePermanent(key);
+      });
+    }
 
     card.querySelector('.article-stream-title').addEventListener('click', () => {
       showArticleDetailView(key);
@@ -1957,74 +2019,108 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
  * Switch page view to Bosh sahifa (Home Page View)
  * Note: Articles stream is NOT on home view; only Hero & Carousel and Contact
  */
+function hideAllViews() {
+  const ids = ['homeView', 'articlesView', 'archiveView', 'contactsSettingsView', 'articleDetailView'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+}
+
+function setActiveNavItem(activeId) {
+  const items = ['navItemHome', 'navItemArticles', 'navItemArchive', 'navItemContacts'];
+  items.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === activeId) el.classList.add('active');
+      else el.classList.remove('active');
+    }
+  });
+}
+
 function showHomeView() {
   currentActiveView = 'home';
+  hideAllViews();
   const homeView = document.getElementById('homeView');
-  const articlesView = document.getElementById('articlesView');
-  const articleDetailView = document.getElementById('articleDetailView');
-  const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
-  const navItemHome = document.getElementById('navItemHome');
-  const navItemArticles = document.getElementById('navItemArticles');
-
   if (homeView) homeView.style.display = 'block';
-  if (articlesView) articlesView.style.display = 'none';
-  if (articleDetailView) articleDetailView.style.display = 'none';
+  setActiveNavItem('navItemHome');
+  const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
   if (breadcrumbBanner) breadcrumbBanner.style.display = 'none';
-
-  if (navItemHome) navItemHome.classList.add('active');
-  if (navItemArticles) navItemArticles.classList.remove('active');
-
   renderCarousel();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/**
- * Switch page view to Maqolalar (Articles Section View)
- */
 function showArticlesView() {
   currentActiveView = 'articles';
-  const homeView = document.getElementById('homeView');
+  hideAllViews();
   const articlesView = document.getElementById('articlesView');
-  const articleDetailView = document.getElementById('articleDetailView');
-  const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
-  const navItemHome = document.getElementById('navItemHome');
-  const navItemArticles = document.getElementById('navItemArticles');
-
-  if (homeView) homeView.style.display = 'none';
   if (articlesView) articlesView.style.display = 'block';
-  if (articleDetailView) articleDetailView.style.display = 'none';
+  setActiveNavItem('navItemArticles');
+  const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
   if (breadcrumbBanner) breadcrumbBanner.style.display = 'none';
-
-  if (navItemHome) navItemHome.classList.remove('active');
-  if (navItemArticles) navItemArticles.classList.add('active');
-
   renderArticlesStream();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/**
- * Switch page view to Maqola Tafsiloti (Article Detail View)
- */
+function showArchiveView() {
+  if (!isAdminLoggedIn()) {
+    showToast("Arxiv bo'limiga faqat admin ruxsatiga ega!");
+    showHomeView();
+    return;
+  }
+  currentActiveView = 'archive';
+  hideAllViews();
+  const archiveView = document.getElementById('archiveView');
+  if (archiveView) archiveView.style.display = 'block';
+  setActiveNavItem('navItemArchive');
+  const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
+  if (breadcrumbBanner) breadcrumbBanner.style.display = 'none';
+  renderArchiveStream();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showContactsView() {
+  if (!isAdminLoggedIn()) {
+    showToast("Aloqa sozlamalariga faqat admin ruxsatiga ega!");
+    showHomeView();
+    return;
+  }
+  currentActiveView = 'contacts';
+  hideAllViews();
+  const contactsView = document.getElementById('contactsSettingsView');
+  if (contactsView) contactsView.style.display = 'block';
+  setActiveNavItem('navItemContacts');
+  const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
+  if (breadcrumbBanner) breadcrumbBanner.style.display = 'none';
+  populateContactSettingsForm();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function populateContactSettingsForm() {
+  const contacts = getContactSettings();
+  const inpTg = document.getElementById('adminPageContactTelegram');
+  const inpInsta = document.getElementById('adminPageContactInstagram');
+  const inpPhone = document.getElementById('adminPageContactPhone');
+  const inpEmail = document.getElementById('adminPageContactEmail');
+  const inpAddr = document.getElementById('adminPageContactAddress');
+
+  if (inpTg && contacts.telegram) inpTg.value = contacts.telegram;
+  if (inpInsta && contacts.instagram) inpInsta.value = contacts.instagram;
+  if (inpPhone && contacts.phone) inpPhone.value = contacts.phone;
+  if (inpEmail && contacts.email) inpEmail.value = contacts.email;
+  if (inpAddr && contacts.address) inpAddr.value = contacts.address;
+}
+
 function showArticleDetailView(articleId) {
-  const homeView = document.getElementById('homeView');
-  const articlesView = document.getElementById('articlesView');
+  hideAllViews();
   const articleDetailView = document.getElementById('articleDetailView');
   const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
-  const navItemHome = document.getElementById('navItemHome');
-  const navItemArticles = document.getElementById('navItemArticles');
-
   if (articleId && ARTICLES[articleId]) {
     currentArticleId = articleId;
   }
-
-  if (homeView) homeView.style.display = 'none';
-  if (articlesView) articlesView.style.display = 'none';
   if (articleDetailView) articleDetailView.style.display = 'block';
   if (breadcrumbBanner) breadcrumbBanner.style.display = 'block';
-
-  if (navItemHome) navItemHome.classList.remove('active');
-  if (navItemArticles) navItemArticles.classList.add('active');
-
+  setActiveNavItem('navItemArticles');
   renderArticle();
   window.scrollTo({ top: 100, behavior: 'smooth' });
 }
@@ -2397,6 +2493,21 @@ document.addEventListener('DOMContentLoaded', () => {
   navPublicationsLink?.addEventListener('click', (e) => {
     e.preventDefault();
     showArticlesView();
+    history.pushState(null, '', '#publications');
+  });
+
+  const navArchiveLink = document.getElementById('navArchiveLink');
+  navArchiveLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showArchiveView();
+    history.pushState(null, '', '#archive');
+  });
+
+  const navContactsLink = document.getElementById('navContactsLink');
+  navContactsLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showContactsView();
+    history.pushState(null, '', '#contacts');
   });
 
   const bcArticlesLink = document.getElementById('bcArticles');
@@ -2796,6 +2907,12 @@ ER  - `;
         if (btnAdminEditContacts) {
           btnAdminEditContacts.style.display = isAdmin ? 'inline-flex' : 'none';
         }
+        const navItemArchive = document.getElementById('navItemArchive');
+        const navItemContacts = document.getElementById('navItemContacts');
+        if (navItemArchive) navItemArchive.style.display = isAdmin ? 'block' : 'none';
+        if (navItemContacts) navItemContacts.style.display = isAdmin ? 'block' : 'none';
+        updateAdminTabBadges();
+        renderArticlesStream();
 
         if (userProfilePill) {
           userProfilePill.style.display = 'inline-flex';
@@ -2838,6 +2955,14 @@ ER  - `;
       if (adminAddArticleBtn) adminAddArticleBtn.style.display = 'none';
       const btnAdminEditContacts = document.getElementById('btnAdminEditContacts');
       if (btnAdminEditContacts) btnAdminEditContacts.style.display = 'none';
+      const navItemArchive = document.getElementById('navItemArchive');
+      const navItemContacts = document.getElementById('navItemContacts');
+      if (navItemArchive) navItemArchive.style.display = 'none';
+      if (navItemContacts) navItemContacts.style.display = 'none';
+      if (currentActiveView === 'archive' || currentActiveView === 'contacts') {
+        showHomeView();
+      }
+      renderArticlesStream();
       if (userProfilePill) {
         userProfilePill.style.display = 'none';
         userProfilePill.setAttribute('hidden', '');
@@ -3296,9 +3421,8 @@ ER  - `;
   adminTabBtnCarousel?.addEventListener('click', () => switchAdminTab('carousel'));
   adminTabBtnArchive?.addEventListener('click', () => switchAdminTab('archive'));
 
-  function openAdminModal(defaultTab = 'article') {
+  function openAdminModal() {
     if (!adminModal) return;
-    switchAdminTab(defaultTab);
     adminModal.removeAttribute('hidden');
     document.body.style.overflow = 'hidden';
   }
@@ -3326,7 +3450,40 @@ ER  - `;
   // Quick edit button from homepage contact section
   btnAdminEditContacts?.addEventListener('click', (e) => {
     e.preventDefault();
-    openAdminModal('contact');
+    showContactsView();
+    history.pushState(null, '', '#contacts');
+  });
+
+  // Admin Page Contacts Form
+  const adminPageContactForm = document.getElementById('adminPageContactForm');
+  adminPageContactForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const telegram = document.getElementById('adminPageContactTelegram')?.value.trim();
+    const instagram = document.getElementById('adminPageContactInstagram')?.value.trim();
+    const phone = document.getElementById('adminPageContactPhone')?.value.trim();
+    const email = document.getElementById('adminPageContactEmail')?.value.trim();
+    const address = document.getElementById('adminPageContactAddress')?.value.trim();
+
+    if (!telegram || !instagram || !phone) {
+      showToast("Iltimos, asosiy aloqa maydonlarini to'ldiring.");
+      return;
+    }
+
+    const updated = { telegram, instagram, phone, email, address };
+    try {
+      localStorage.setItem('qardu_contact_settings', JSON.stringify(updated));
+    } catch (err) {}
+
+    if (window.supabaseClient) {
+      window.supabaseClient
+        .from('journal_settings')
+        .upsert({ id: 'contacts', ...updated })
+        .then(() => console.log('Contacts synced with Supabase'))
+        .catch(e => console.warn('Supabase contacts sync info:', e));
+    }
+
+    updateContactSectionDOM(updated);
+    showToast("Aloqa sozlamalari muvaffaqiyatli saqlandi!");
   });
 
   // Admin Contact Form Submission
@@ -3832,7 +3989,16 @@ ER  - `;
   }
 
   function checkHashRoute() {
-    if (window.location.hash === '#admin') {
+    const hash = window.location.hash;
+    if (hash === '#articles' || hash === '#publications') {
+      showArticlesView();
+    } else if (hash === '#archive') {
+      showArchiveView();
+    } else if (hash === '#contacts' || hash === '#contact-settings') {
+      showContactsView();
+    } else if (hash === '#home' || !hash) {
+      showHomeView();
+    } else if (hash === '#admin') {
       if (isAdminLoggedIn()) {
         openAdminModal();
       } else {
@@ -3845,11 +4011,6 @@ ER  - `;
   // Initial render & state restoration
   loadCustomArticles().then(() => {
     updateStaticTranslations();
-    if (window.location.hash === '#articles' || window.location.hash === '#publications') {
-      showArticlesView();
-    } else {
-      showHomeView();
-    }
     checkHashRoute();
   }).catch(() => {
     updateStaticTranslations();
@@ -3858,13 +4019,7 @@ ER  - `;
   });
 
   window.addEventListener('hashchange', () => {
-    if (window.location.hash === '#articles' || window.location.hash === '#publications') {
-      showArticlesView();
-    } else if (window.location.hash === '#home' || !window.location.hash) {
-      showHomeView();
-    } else if (window.location.hash === '#admin') {
-      checkHashRoute();
-    }
+    checkHashRoute();
   });
 
   initSupabaseAuth();
