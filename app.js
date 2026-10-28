@@ -117,6 +117,7 @@ const I18N = {
     adminFieldUDC: "UDK",
     adminFieldKeywords: "Kalit so'zlar (vergul bilan ajratib yozing)",
     adminFieldAbstract: "Annotatsiya *",
+    adminFieldCoverImage: "Maqola muqova rasmi (ixtiyoriy)",
     adminFieldFile: "PDF fayl yuklash",
     adminBtnPublish: "Maqolani joylash",
     adminBtnCancel: "Bekor qilish",
@@ -459,6 +460,7 @@ const I18N = {
     adminFieldUDC: "UDC",
     adminFieldKeywords: "Keywords (comma-separated)",
     adminFieldAbstract: "Abstract *",
+    adminFieldCoverImage: "Article Cover Image (optional)",
     adminFieldFile: "Upload PDF File",
     adminBtnPublish: "Publish Article",
     adminBtnCancel: "Cancel",
@@ -1532,9 +1534,15 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
     else if (art.categoryKey === 'econ') badgeClass += ' article-stream-category-badge--econ';
     else if (art.categoryKey === 'hist') badgeClass += ' article-stream-category-badge--hist';
 
+    const coverImgSrc = art.coverImage || art.slideImage || null;
     const card = document.createElement('article');
-    card.className = 'article-stream-card';
+    card.className = `article-stream-card ${coverImgSrc ? 'article-stream-card--has-cover' : ''}`;
     card.innerHTML = `
+      ${coverImgSrc ? `
+        <div class="article-stream-cover">
+          <img src="${coverImgSrc}" alt="${titleText}" class="article-stream-cover-img" loading="lazy">
+        </div>
+      ` : ''}
       <div class="article-stream-meta-row">
         <span class="${badgeClass}">${catText}</span>
         <span class="article-stream-issue-pill">${issueText}</span>
@@ -2842,6 +2850,52 @@ ER  - `;
   const adminFileInput = document.getElementById('adminFileUpload');
   const adminFileStatusText = document.getElementById('adminFileStatusText');
 
+  // Cover image input elements
+  const adminCoverImageInput = document.getElementById('adminCoverImageUpload');
+  const adminImagePlaceholder = document.getElementById('adminImagePlaceholder');
+  const adminImagePreviewBox = document.getElementById('adminImagePreviewBox');
+  const adminImagePreviewThumb = document.getElementById('adminImagePreviewThumb');
+  const adminImageFileName = document.getElementById('adminImageFileName');
+  const btnRemoveCoverImage = document.getElementById('btnRemoveCoverImage');
+
+  let currentCoverImageBase64 = null;
+  let currentCoverImageFile = null;
+
+  adminCoverImageInput?.addEventListener('change', async () => {
+    if (adminCoverImageInput.files && adminCoverImageInput.files.length > 0) {
+      const file = adminCoverImageInput.files[0];
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(png|jpe?g|webp)$/i)) {
+        showToast("Faqat rasm (.png, .jpg, .webp) fayllarini yuklash mumkin!");
+        adminCoverImageInput.value = '';
+        currentCoverImageBase64 = null;
+        currentCoverImageFile = null;
+        return;
+      }
+      try {
+        currentCoverImageFile = file;
+        currentCoverImageBase64 = await readFileAsDataUrl(file);
+        if (adminImagePreviewThumb) adminImagePreviewThumb.src = currentCoverImageBase64;
+        if (adminImageFileName) adminImageFileName.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        if (adminImagePlaceholder) adminImagePlaceholder.style.display = 'none';
+        if (adminImagePreviewBox) adminImagePreviewBox.style.display = 'flex';
+      } catch (err) {
+        console.warn("Cover image read error:", err);
+      }
+    }
+  });
+
+  btnRemoveCoverImage?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (adminCoverImageInput) adminCoverImageInput.value = '';
+    currentCoverImageBase64 = null;
+    currentCoverImageFile = null;
+    if (adminImagePlaceholder) adminImagePlaceholder.style.display = 'flex';
+    if (adminImagePreviewBox) adminImagePreviewBox.style.display = 'none';
+    if (adminImagePreviewThumb) adminImagePreviewThumb.src = '';
+  });
+
   // Admin Tabs & Contact Settings Elements
   const adminTabBtnArticle = document.getElementById('adminTabBtnArticle');
   const adminTabBtnContact = document.getElementById('adminTabBtnContact');
@@ -2886,6 +2940,12 @@ ER  - `;
     if (adminFileStatusText) {
       adminFileStatusText.textContent = "Faqat PDF (.pdf) formatdagi faylni tanlang";
     }
+    if (adminCoverImageInput) adminCoverImageInput.value = '';
+    currentCoverImageBase64 = null;
+    currentCoverImageFile = null;
+    if (adminImagePlaceholder) adminImagePlaceholder.style.display = 'flex';
+    if (adminImagePreviewBox) adminImagePreviewBox.style.display = 'none';
+    if (adminImagePreviewThumb) adminImagePreviewThumb.src = '';
   }
 
   // Tab switching triggers
@@ -3001,6 +3061,28 @@ ER  - `;
       let fileName = null;
       let fileBase64 = null;
       let fileToSave = null;
+      let coverImageUrl = currentCoverImageBase64;
+
+      // Also attempt upload cover image to Supabase Storage if configured
+      if (currentCoverImageFile && window.supabaseClient) {
+        try {
+          const imgClean = currentCoverImageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const imgPath = `covers/${Date.now()}_${imgClean}`;
+          const { error: imgErr } = await window.supabaseClient.storage
+            .from('article-files')
+            .upload(imgPath, currentCoverImageFile);
+          if (!imgErr) {
+            const { data: imgData } = window.supabaseClient.storage
+              .from('article-files')
+              .getPublicUrl(imgPath);
+            if (imgData?.publicUrl) {
+              coverImageUrl = imgData.publicUrl;
+            }
+          }
+        } catch (imgStorageErr) {
+          console.warn('Cover image storage upload notice:', imgStorageErr);
+        }
+      }
 
       // Handle uploaded PDF file (Strictly .pdf only)
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
@@ -3078,6 +3160,8 @@ ER  - `;
         },
         keywords: { uz: keywords, ru: keywords, en: keywords },
         abstract: { uz: abstract, ru: abstract, en: abstract },
+        coverImage: coverImageUrl || null,
+        slideImage: coverImageUrl || null,
         metrics: { views: 1, downloads: 0, citations: 0 },
         authors: [{
           name: { uz: authors, ru: authors, en: authors },
@@ -3283,22 +3367,28 @@ ER  - `;
     }
   });
 
+  // Helper to detect test articles
+  function isTestArticle(item) {
+    if (!item) return true;
+    const t = ((item.title && (item.title.uz || item.title)) || '').toLowerCase();
+    const d = ((item.passport && item.passport.doi) || item.doi || '').toLowerCase();
+    const a = ((item.abstract && (item.abstract.uz || item.abstract)) || '').toLowerCase();
+    const auth = ((item.passport && item.passport.authorsText) || item.authors || '').toLowerCase();
+    return t.includes('suniy intellekt') || d.includes('cewrcwec') || a.includes('weecwecwe') || auth.includes('umid dilmurodov');
+  }
+
   // Load custom stored articles from localStorage and Supabase
   async function loadCustomArticles() {
-    // 1. From localStorage
+    // 1. From localStorage (strictly purged of localhost test articles)
     try {
       const raw = localStorage.getItem('qardu_custom_articles');
       if (raw) {
         const list = JSON.parse(raw);
         if (Array.isArray(list)) {
-          // Remove old template IDs
-          const filtered = list.filter(item => item && item.id && !['art-1', 'art-2', 'art-3'].includes(item.id));
-          if (filtered.length !== list.length) {
-            localStorage.setItem('qardu_custom_articles', JSON.stringify(filtered));
-          }
+          const filtered = list.filter(item => item && item.id && !['art-1', 'art-2', 'art-3'].includes(item.id) && !isTestArticle(item));
+          localStorage.setItem('qardu_custom_articles', JSON.stringify(filtered));
           filtered.forEach(item => {
             ARTICLES[item.id] = item;
-            // Preload file blob from IndexedDB into memory
             getArticleFileFromDb(item.id).then(rec => {
               if (rec && rec.blob) {
                 ARTICLE_FILES[item.id] = rec.blob;
@@ -3321,6 +3411,7 @@ ER  - `;
 
         if (!error && data && data.length) {
           data.forEach(row => {
+            if (isTestArticle(row)) return;
             const rowId = `art-sb-${row.id}`;
             if (!ARTICLES[rowId]) {
               const kw = Array.isArray(row.keywords) ? row.keywords : (row.keywords ? String(row.keywords).split(',').map(s => s.trim()) : []);
@@ -3346,6 +3437,8 @@ ER  - `;
                 },
                 keywords: { uz: kw, ru: kw, en: kw },
                 abstract: { uz: row.abstract, ru: row.abstract, en: row.abstract },
+                coverImage: row.cover_image || row.cover_url || null,
+                slideImage: row.cover_image || row.cover_url || null,
                 metrics: { views: 1, downloads: 0, citations: 0 },
                 authors: [{
                   name: { uz: row.authors, ru: row.authors, en: row.authors },

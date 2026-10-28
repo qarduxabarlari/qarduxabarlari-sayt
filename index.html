@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>QarDU Xabarlari | Ilmiy-nazariy jurnal</title>
   <meta name="description"
     content="Qarshi Davlat Universiteti Xabarlari ilmiy jurnali - Maqolalar, annotatsiyalar, kalit so'zlar va maqola pasporti.">
@@ -1084,6 +1084,32 @@
           <div class="admin-form-group admin-form-group--full">
             <label for="adminAbstract" class="admin-label" data-i18n="adminFieldAbstract">Annotatsiya *</label>
             <textarea id="adminAbstract" class="admin-textarea" rows="5" placeholder="Maqola annotatsiyasini kiriting..." required></textarea>
+          </div>
+
+          <!-- Cover Image Upload (Optional / Ixtiyoriy) -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminCoverImageUpload" class="admin-label">
+              <span data-i18n="adminFieldCoverImage">Maqola muqova rasmi</span>
+              <span class="admin-label-optional" style="font-weight: normal; color: #64748b; font-size: 0.82rem; margin-left: 6px;">(ixtiyoriy, .png, .jpg, .jpeg, .webp)</span>
+            </label>
+            <div class="admin-file-upload-area admin-image-upload-area" id="adminImageUploadArea">
+              <input type="file" id="adminCoverImageUpload" class="admin-file-input" accept="image/png,image/jpeg,image/jpg,image/webp">
+              <div class="admin-file-placeholder" id="adminImagePlaceholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="1.8">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span id="adminImageStatusText">Rasm yuklash (ixtiyoriy) — tanlang yoki sudrab tashlang</span>
+              </div>
+              <div class="admin-image-preview-box" id="adminImagePreviewBox" style="display: none;">
+                <img id="adminImagePreviewThumb" src="" alt="Muqova rasmi ko'rinishi" class="admin-image-thumb">
+                <div class="admin-image-preview-meta">
+                  <span id="adminImageFileName" class="admin-image-name">rasm.png</span>
+                  <button type="button" id="btnRemoveCoverImage" class="btn-remove-cover-image" title="Rasmni bekor qilish">✕ Bekor qilish</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- File Upload (PDF Only) -->
