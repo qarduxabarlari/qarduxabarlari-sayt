@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QarDU Xabarlari | Ilmiy-nazariy jurnal</title>
+  <meta name="description"
+    content="Qarshi Davlat Universiteti Xabarlari ilmiy jurnali - Maqolalar, annotatsiyalar, kalit so'zlar va maqola pasporti.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="qardu-xabarlari.png">
+</head>
+
+<body>
+
+  <!-- Main Header (Inspired by BirdsNZ but modern academic) -->
+  <header class="site-header" id="masthead">
+    <div class="container site-header__inner">
+      <div class="brand-group">
+        <a href="#home" class="brand-link" id="brand-link">
+          <div class="brand-emblem-wrapper">
+            <img src="qardu-xabarlari.png" alt="QarDU Emblem" class="brand-emblem">
+          </div>
+          <div class="brand-text">
+            <span class="brand-uni" data-i18n="uniName">QARSHI DAVLAT UNIVERSITETI</span>
+            <span class="brand-title">QarDU XABARLARI</span>
+            <span class="brand-subtitle" data-i18n="journalSubtitle">ILMIY-NAZARIY VA USLUBIY JURNAL</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-actions">
+        <!-- Search bar -->
+        <div class="header-search">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="siteSearchInput" placeholder="Maqolalardan izlash..." data-i18n-ph="searchPlaceholder"
+            aria-label="Search articles">
+          <button type="button" id="searchSubmitBtn" class="search-btn" title="Qidirish">
+            <span data-i18n="searchBtn">Qidirish</span>
+          </button>
+        </div>
+
+        <!-- Language Switcher (Compact UZ / RU / EN) -->
+        <div class="lang-switcher" role="group" aria-label="Tilni tanlash / Language Selector">
+          <button type="button" class="lang-btn active" data-lang="uz" id="lang-uz" title="O'zbekcha">UZ</button>
+          <button type="button" class="lang-btn" data-lang="ru" id="lang-ru" title="Русский">RU</button>
+          <button type="button" class="lang-btn" data-lang="en" id="lang-en" title="English">EN</button>
+        </div>
+
+        <!-- User Auth Action Button / Profile Menu -->
+        <div class="user-auth-wrapper" id="userAuthWrapper">
+          <button type="button" class="btn-header-auth" id="btnOpenAuthModal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span data-i18n="authBtnHeader">Kirish / Ro'yxatdan o'tish</span>
+          </button>
+
+          <!-- When Logged In: User Profile Dropdown Pill -->
+          <div class="user-profile-pill" id="userProfilePill" style="display: none;" hidden>
+            <div class="user-avatar-circle" id="userAvatarText">U</div>
+            <span class="user-display-name" id="userDisplayName">Foydalanuvchi</span>
+            <button type="button" class="btn-logout" id="btnLogout" title="Tizimdan chiqish" aria-label="Logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Paper Button (Hidden by default, appears only after login/registration) -->
+        <a href="#submit" class="btn-submit-paper" id="submitPaperBtn" style="display: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          <span data-i18n="submitArticleBtn">Maqola topshirish</span>
+        </a>
+
+        <!-- Admin Add Article Button (Visible only for admin) -->
+        <button type="button" class="btn-admin-add-article" id="adminAddArticleBtn" style="display: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+          <span data-i18n="adminPanelBtn">Maqola joylash</span>
+        </button>
+
+        <!-- Mobile Menu Toggle -->
+        <button type="button" class="mobile-toggle" id="mobileMenuToggle" aria-label="Open Navigation Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Menu Bar -->
+    <nav class="main-nav" id="mainNav">
+      <div class="container">
+        <ul class="nav-list">
+          <li class="nav-item active" id="navItemHome"><a href="#home" class="nav-link" id="navHomeLink" data-i18n="navHome">Bosh sahifa</a></li>
+          <li class="nav-item" id="navItemArticles"><a href="#publications" class="nav-link" id="navPublications" data-i18n="navPublications">Maqolalar</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Breadcrumbs & Journal Header Banner -->
+  <section class="page-breadcrumb-banner" id="pageBreadcrumbBanner" style="display: none;">
+    <div class="container">
+      <div class="breadcrumb-trail">
+        <a href="#home" id="bcHomeLink" data-i18n="bcHome">Bosh sahifa</a>
+        <span class="bc-sep">/</span>
+        <a href="#publications" id="bcArticles" data-i18n="bcArticles">Maqolalar</a>
+        <span class="bc-sep">/</span>
+        <span class="bc-badge" id="bcIssue">—</span>
+        <span class="bc-sep">/</span>
+        <span class="bc-current" id="bcArticleTitle">Maqolalar</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Area -->
+  <main class="main-content" id="content">
+    <div class="container">
+
+      <!-- ======================================================== -->
+      <!-- 1. BOSH SAHIFA (HOMEPAGE VIEW) — BIRDSNZ INSPIRED        -->
+      <!-- ======================================================== -->
+      <div class="home-view" id="homeView">
+
+        <!-- BirdsNZ Hero Header & Dynamic Auto Carousel -->
+        <div class="c-page-header c-page-header__homepage">
+          <!-- Left: Blue Content Block -->
+          <div class="c-page-header__content c-page-header__content-blue">
+            <div class="hero-issn-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>ISSN 2181-7006 • OAK Ro'yxatida</span>
+            </div>
+            <h1 class="hero-brand-title" data-i18n="heroTitle">QarDU<br>Xabarlari</h1>
+            <p class="hero-desc" data-i18n="heroDesc">
+              Qarshi Davlat Universiteti rasmiy ilmiy-nazariy va uslubiy jurnali veb-platformasiga xush kelibsiz! Jurnal OAK tomonidan e'tirof etilgan bo'lib, tabiiy, aniq, axborot texnologiyalari va ijtimoiy-gumanitar sohalardagi eng so'nggi ilmiy tadqiqotlar va kashfiyotlarni muntazam chop etadi.
+            </p>
+            <div class="hero-cta-group">
+              <a href="#articlesStreamSection" class="hero-btn-primary" id="btnHeroBrowse">
+                <span data-i18n="heroBrowseBtn">Maqolalar bilan tanishish →</span>
+              </a>
+              <a href="#submit" class="hero-btn-secondary" id="btnHeroSubmit">
+                <span data-i18n="heroSubmitBtn">Maqola topshirish</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Right: Visuals / Rotating Article Slides -->
+          <div class="c-page-header__visuals">
+            <div class="c-homeCarousel" id="homeCarousel" aria-label="BirdsNZ style home articles carousel">
+              <!-- Carousel slides rendered dynamically via JavaScript -->
+            </div>
+
+            <!-- Carousel Controls -->
+            <button type="button" class="c-homeCarousel__arrow c-homeCarousel__arrow--prev" id="carouselPrevBtn" aria-label="Oldingi maqola">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button type="button" class="c-homeCarousel__arrow c-homeCarousel__arrow--next" id="carouselNextBtn" aria-label="Keyingi maqola">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+
+            <!-- Indicators (Dots) -->
+            <div class="c-homeCarousel__dots" id="carouselDots">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Accreditations & Key Metrics Ribbon -->
+        <section class="c-journal-badges" aria-label="Journal accreditations and badges">
+          <div class="badge-card">
+            <div class="badge-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+            </div>
+            <div class="badge-card-info">
+              <h4 data-i18n="badgeOak">OAK e'tirof etgan nashr</h4>
+              <p data-i18n="badgeOakDesc">Oliy Attestatsiya Komissiyasi ro'yxatida</p>
+            </div>
+          </div>
+
+          <div class="badge-card">
+            <div class="badge-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </div>
+            <div class="badge-card-info">
+              <h4 data-i18n="badgeDoi">CrossRef DOI a'zosi</h4>
+              <p data-i18n="badgeDoiDesc">10.59272/qardu xalqaro prefiksi</p>
+            </div>
+          </div>
+
+          <div class="badge-card">
+            <div class="badge-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <div class="badge-card-info">
+              <h4 data-i18n="badgeIndex">Xalqaro ilmiy indekslar</h4>
+              <p data-i18n="badgeIndexDesc">Google Scholar, Index Copernicus</p>
+            </div>
+          </div>
+
+          <div class="badge-card">
+            <div class="badge-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0"></path>
+              </svg>
+            </div>
+            <div class="badge-card-info">
+              <h4 data-i18n="badgeAccess">Open Access (CC BY 4.0)</h4>
+              <p data-i18n="badgeAccessDesc">Ochiq va erkin ilmiy mutolaa</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Sequential Articles Stream ("Ketma-ket chiqib turishi") -->
+        <section class="c-articles-stream-section" id="articlesStreamSection">
+          <div class="stream-header-box">
+            <div class="stream-title-group">
+              <h2>
+                <span data-i18n="streamHeading">So'nggi nashr etilgan maqolalar</span>
+                <span class="stream-count-badge" id="streamCountBadge">0 ta maqola</span>
+              </h2>
+              <p class="stream-subtitle" data-i18n="streamSubtitle">
+                QarDU Xabarlari ilmiy jurnalining yangi sonidagi dolzarb tadqiqotlar va tahliliy ishlar
+              </p>
+            </div>
+          </div>
+
+          <!-- Controls: Category Filters & Search -->
+          <div class="stream-controls-bar">
+            <div class="stream-filter-pills" id="streamFilterPills" role="tablist">
+              <button type="button" class="stream-filter-pill active" data-category="all" data-i18n="filterAll">Barchasi</button>
+              <button type="button" class="stream-filter-pill" data-category="nat" data-i18n="filterNat">Tabiiy fanlar va ekologiya</button>
+              <button type="button" class="stream-filter-pill" data-category="tech" data-i18n="filterTech">Axborot texnologiyalari va AI</button>
+              <button type="button" class="stream-filter-pill" data-category="econ" data-i18n="filterEcon">Iqtisodiyot va innovatsiyalar</button>
+              <button type="button" class="stream-filter-pill" data-category="hist" data-i18n="filterHist">Tarix va filologiya</button>
+            </div>
+            <div class="stream-search-wrapper">
+              <svg class="stream-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="streamSearchInput" class="stream-search-input" placeholder="Maqolalardan izlash..." data-i18n-ph="searchStreamPlaceholder">
+            </div>
+          </div>
+
+          <!-- Dynamic Articles Stream Feed Container -->
+          <div class="articles-stream-feed" id="articlesStreamFeed">
+            <!-- Rendered sequentially via JavaScript -->
+          </div>
+        </section>
+
+        <!-- 4. Journal Contact & Social Media Section (Telegram, Instagram, Phone) -->
+        <section class="c-journal-contact-section" id="journalContactSection">
+          <div class="contact-section-inner">
+            <div class="contact-section-header">
+              <div class="contact-header-left">
+                <div class="contact-badge-pill">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                  <span data-i18n="contactSectionBadge">Rasmiy aloqa va ijtimoiy tarmoqlar</span>
+                </div>
+                <h2 class="contact-section-title" data-i18n="contactSectionTitle">Biz bilan bog'laning va yangiliklarni kuzatib boring</h2>
+                <p class="contact-section-desc" data-i18n="contactSectionDesc">
+                  Qarshi davlat universiteti «QarDU Xabarlari» ilmiy jurnali rasmiy kanallari va tahririyat bilan bog'lanish ma'lumotlari
+                </p>
+              </div>
+
+              <!-- Admin Quick Edit Button (Visible when admin is logged in) -->
+              <div class="contact-header-right">
+                <button type="button" class="btn-admin-edit-contacts" id="btnAdminEditContacts" style="display: none;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span data-i18n="adminEditContactsBtn">Aloqani tahrirlash</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Social & Contact Cards Grid -->
+            <div class="contact-channels-grid">
+              <!-- 1. Telegram Channel Card -->
+              <a href="https://t.me/qardu_xabarlari" target="_blank" rel="noopener noreferrer" class="contact-channel-card contact-channel--tg" id="linkSocialTelegram">
+                <div class="channel-card-icon channel-card-icon--tg">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                  </svg>
+                </div>
+                <div class="channel-card-content">
+                  <span class="channel-badge channel-badge--tg">Telegram</span>
+                  <h3 class="channel-title" data-i18n="socialTelegramTitle">Telegram kanalimiz</h3>
+                  <p class="channel-handle" id="displaySocialTelegram">@qardu_xabarlari</p>
+                </div>
+                <div class="channel-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </a>
+
+              <!-- 2. Instagram Page Card -->
+              <a href="https://instagram.com/qardu_uz" target="_blank" rel="noopener noreferrer" class="contact-channel-card contact-channel--insta" id="linkSocialInstagram">
+                <div class="channel-card-icon channel-card-icon--insta">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                </div>
+                <div class="channel-card-content">
+                  <span class="channel-badge channel-badge--insta">Instagram</span>
+                  <h3 class="channel-title" data-i18n="socialInstagramTitle">Instagram sahifamiz</h3>
+                  <p class="channel-handle" id="displaySocialInstagram">@qardu_uz</p>
+                </div>
+                <div class="channel-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </a>
+
+              <!-- 3. Phone Number Card -->
+              <a href="tel:+998752210055" class="contact-channel-card contact-channel--phone" id="linkSocialPhone">
+                <div class="channel-card-icon channel-card-icon--phone">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                </div>
+                <div class="channel-card-content">
+                  <span class="channel-badge channel-badge--phone" data-i18n="socialBadgePhone">Bog'lanish</span>
+                  <h3 class="channel-title" data-i18n="socialPhoneTitle">Tahririyat telefoni</h3>
+                  <p class="channel-handle" id="displaySocialPhone">+998 (75) 221-00-55</p>
+                </div>
+                <div class="channel-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </a>
+            </div>
+
+            <!-- Footer note and copyright -->
+            <div class="contact-footer-bar">
+              <div class="contact-footer-copy">
+                <p>© Qarshi davlat universiteti «QarDU Xabarlari» ilmiy jurnali. Barcha huquqlar himoyalangan.</p>
+                <span class="contact-footer-issn">ISSN: 2181-7006 | O'zbekiston, Qarshi shahri, Ko'chabog' ko'chasi, 17</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div> <!-- /#homeView -->
+
+      <!-- ======================================================== -->
+      <!-- 2. MAQOLA TAFSILOTI SAHIFASI (ARTICLE DETAIL VIEW)       -->
+      <!-- ======================================================== -->
+      <div class="article-detail-view" id="articleDetailView" style="display: none;">
+        <!-- Back to Home Button -->
+        <button type="button" class="btn-back-to-home" id="btnBackToHome">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span data-i18n="btnBackToHome">← Bosh sahifaga qaytish</span>
+        </button>
+
+        <!-- ARTICLE HERO SECTION -->
+        <article class="article-detail-card" id="articleDetailCard">
+
+        <!-- Article Title -->
+        <h1 class="article-main-title" id="artTitle">Hozircha saytda maqolalar mavjud emas</h1>
+
+        <!-- ======================================================== -->
+        <!-- MAQOLA PASPORTI (CLEAN SINGLE-LANGUAGE LABELS) -->
+        <!-- ======================================================== -->
+        <div class="publication-meta-section" id="publicationPassport">
+          <div class="publication-meta-grid">
+            <!-- Left Side: Journal Emblem / Logo Cover -->
+            <div class="passport-brand-card">
+              <div class="passport-logo-frame">
+                <img src="qardu-xabarlari.png" alt="QarDU Xabarlari Logo" class="passport-logo-img">
+              </div>
+              <div class="passport-brand-caption">
+                <h3 class="passport-journal-title">QarDU XABARLARI</h3>
+                <p class="passport-journal-sub" data-i18n="journalCaption">Qarshi Davlat Universiteti axborotnomasi</p>
+                <div class="passport-seal-badge">
+                  <span data-i18n="oacApproved">OAK e'tirof etgan nashr</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Side: Clean Zebra-striped Metadata Table -->
+            <div class="passport-table-container">
+              <table class="passport-table" id="passportTable" aria-label="Maqola pasporti">
+                <tbody>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldPubType">Nashr turi</td>
+                    <td class="passport-value" id="valPubType">—</td>
+                  </tr>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldPubYear">Nashr yili</td>
+                    <td class="passport-value" id="valPubYear">—</td>
+                  </tr>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldAuthors">Muallif(lar)</td>
+                    <td class="passport-value" id="valAuthors">—</td>
+                  </tr>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldJournalName">Jurnal nomi</td>
+                    <td class="passport-value highlight-journal" id="valJournalName">QarDU Xabarlari</td>
+                  </tr>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldVolIssue">Tom, Son</td>
+                    <td class="passport-value" id="valVolIssue">—</td>
+                  </tr>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldPagination">Sahifalar</td>
+                    <td class="passport-value" id="valPagination">—</td>
+                  </tr>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldArticleType">Maqola turi</td>
+                    <td class="passport-value" id="valArticleType">—</td>
+                  </tr>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldDOI">DOI</td>
+                    <td class="passport-value" id="valDOI">
+                      <div class="doi-container">
+                        <a href="#" target="_blank" rel="noopener" class="doi-link" id="doiLinkText">—</a>
+                        <button type="button" class="btn-copy-doi" id="btnCopyDoi" title="DOI nusxalash"
+                          aria-label="Copy DOI">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                          </svg>
+                          <span data-i18n="copyDoiBtn">Nusxa</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="passport-row">
+                    <td class="passport-label" data-i18n="fieldUDC">UDK</td>
+                    <td class="passport-value" id="valUDC">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- 3-RASM: KALIT SO'ZLAR (KEYWORDS - BIRDSNZ STYLE) -->
+        <!-- ======================================================== -->
+        <div class="keywords-block" id="keywordsBlock">
+          <span class="keywords-label" data-i18n="keywordsLabel">Kalit so'zlar:</span>
+          <span class="keywords-list" id="keywordsList">—</span>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- 4-RASM: ATTACHMENT (YUKLAB OLISH - BIRDSNZ STYLE) -->
+        <!-- ======================================================== -->
+        <div class="attachment-section" id="attachmentSection">
+          <div class="attachment-heading" data-i18n="attachmentTitle">Ilova</div>
+          <div class="attachment-box">
+            <button type="button" class="attachment-download-btn" id="btnDownloadPdf">
+              <span class="attachment-btn-text" data-i18n="downloadLinkText">Yuklab olish</span>
+              <svg class="attachment-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <path d="M12 7v8M8 11l4 4 4-4"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Secondary tools row (optional quick cite / share / online read) -->
+        <div class="secondary-actions-row">
+          <button type="button" class="btn-subtle-tool" id="btnReadOnline">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            <span data-i18n="readOnlineBtn">Onlayn mutolaa</span>
+          </button>
+          <button type="button" class="btn-subtle-tool" id="btnOpenCiteModal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z">
+              </path>
+              <path
+                d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z">
+              </path>
+            </svg>
+            <span data-i18n="citeBtn">Iqtibos olish</span>
+          </button>
+          <button type="button" class="btn-subtle-tool" id="btnOpenShareModal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span data-i18n="shareBtn">Ulashish</span>
+          </button>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- 5-RASM: ANNOTATSIYA (SHUNCHAKI ANNOTATSIYA, SAYT TILIGA BOG'LANGAN) -->
+        <!-- ======================================================== -->
+        <section class="abstract-section" id="abstractSection">
+          <div class="section-title-bar">
+            <h3 class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <span data-i18n="abstractHeading">Annotatsiya</span>
+            </h3>
+          </div>
+
+          <div class="abstract-body-card">
+            <div class="abstract-callout-bar"></div>
+            <div class="abstract-text-content" id="abstractContentText">
+              <!-- Rendered via JS in active site language -->
+            </div>
+          </div>
+        </section>
+
+
+
+      </article>
+      </div> <!-- /#articleDetailView -->
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODALS -->
+  <!-- ======================================================== -->
+
+  <!-- PDF Reader Modal -->
+  <div class="modal-overlay" id="pdfReaderModal" role="dialog" aria-modal="true" aria-labelledby="pdfModalTitle" hidden>
+    <div class="modal-card modal-card--large">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <div>
+            <h3 class="modal-title" id="pdfModalTitle">Maqola PDF mutolaasi</h3>
+            <span class="modal-subtitle" id="pdfModalSubtitle">QarDU Xabarlari, 2025, 2-son</span>
+          </div>
+        </div>
+        <div class="modal-header-right">
+          <button type="button" class="btn-pdf-action" id="btnModalDownloadDirect">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span data-i18n="downloadBtn">Yuklab olish</span>
+          </button>
+          <button type="button" class="modal-close" id="btnClosePdfModal" aria-label="Close">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body pdf-mock-body">
+        <div class="pdf-viewer-paper">
+          <!-- Realistic PDF Header -->
+          <div class="pdf-page-header">
+            <div class="pdf-h-left">
+              <img src="qardu-xabarlari.png" alt="PDF Logo" class="pdf-mini-logo">
+              <span>QarDU Xabarlari | Bulletin of KarSU | 2025 / 2-son</span>
+            </div>
+            <div class="pdf-h-right">
+              <span>ISSN 2181-7006</span>
+            </div>
+          </div>
+          <div class="pdf-page-content">
+            <div class="pdf-art-meta">
+              <span class="pdf-udc" id="pdfUdcText">UDK: 330.341.1:004.89</span>
+              <span class="pdf-doi" id="pdfDoiText">DOI: 10.59272/qardu.2025.2.14</span>
+            </div>
+            <h2 class="pdf-title" id="pdfTitleText">...</h2>
+            <div class="pdf-authors" id="pdfAuthorsText">...</div>
+            <div class="pdf-affil" id="pdfAffilText">...</div>
+            <hr class="pdf-hr">
+            <div class="pdf-section-label">ANNOTATSIYA / ABSTRACT</div>
+            <p class="pdf-abstract" id="pdfAbstractText">...</p>
+            <div class="pdf-keywords"><strong>Kalit so'zlar / Keywords:</strong> <span id="pdfKeywordsText">...</span>
+            </div>
+            <hr class="pdf-hr">
+            <div id="pdfArticleDynamicBody">
+              <div class="pdf-section-label">MAQOLA MATNI / ARTICLE BODY</div>
+              <p class="pdf-mock-paragraph" id="pdfBodyNotice">
+                Ushbu maqolaning to'liq matni va ilovalarini yuqoridagi "Yuklab olish" tugmasi orqali PDF formatda yuklab olishingiz mumkin.
+              </p>
+            </div>
+            <div class="pdf-page-footer">
+              <span id="pdfFooterPages">Sahifalar: —</span>
+              <span>© QarDU Xabarlari</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cite Generator Modal -->
+  <div class="modal-overlay" id="citeModal" role="dialog" aria-modal="true" aria-labelledby="citeModalTitle" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="citeModalTitle" data-i18n="citeModalHeading">Maqoladan iqtibos keltirish</h3>
+        <button type="button" class="modal-close" id="btnCloseCiteModal" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="cite-format-tabs" role="tablist">
+          <button type="button" class="cite-tab active" data-format="apa">APA 7th</button>
+          <button type="button" class="cite-tab" data-format="gost">GOST / O'zbekiston</button>
+          <button type="button" class="cite-tab" data-format="bibtex">BibTeX</button>
+          <button type="button" class="cite-tab" data-format="mla">MLA 9th</button>
+          <button type="button" class="cite-tab" data-format="chicago">Chicago</button>
+        </div>
+        <div class="cite-result-box">
+          <pre class="cite-text" id="citeResultText">...</pre>
+        </div>
+        <div class="cite-modal-actions">
+          <button type="button" class="btn-copy-citation-modal" id="btnCopyCiteModal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span data-i18n="copyCitationBtn">Iqtibosdan nusxa olish</span>
+          </button>
+          <button type="button" class="btn-download-ris" id="btnDownloadRis">
+            <span data-i18n="downloadRisBtn">.RIS faylini yuklash</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div class="modal-overlay" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="shareModalTitle" data-i18n="shareModalHeading">Maqolani ulashish</h3>
+        <button type="button" class="modal-close" id="btnCloseShareModal" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="share-intro" data-i18n="shareIntro">Hamkasblaringiz va ilmiy jamoatchilik bilan ulashing:</p>
+        <div class="share-links-grid">
+          <button type="button" class="share-social-btn share-tg" id="shareTg">
+            <span>✈️ Telegram</span>
+          </button>
+          <button type="button" class="share-social-btn share-wa" id="shareWa">
+            <span>💬 WhatsApp</span>
+          </button>
+          <button type="button" class="share-social-btn share-tw" id="shareTw">
+            <span>✖ X (Twitter)</span>
+          </button>
+          <button type="button" class="share-social-btn share-fb" id="shareFb">
+            <span>🌐 Facebook</span>
+          </button>
+          <button type="button" class="share-social-btn share-li" id="shareLi">
+            <span>💼 LinkedIn</span>
+          </button>
+          <button type="button" class="share-social-btn share-email" id="shareEmail">
+            <span>✉️ Email</span>
+          </button>
+        </div>
+        <div class="share-copy-link">
+          <input type="text" id="shareUrlInput" readonly value="https://qardu-xabarlari.uz/articles/2025/2/14">
+          <button type="button" id="btnCopyShareUrl" class="btn-copy-url">
+            <span data-i18n="copyLinkBtn">Havolani nusxalash</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- RO'YXATDAN O'TISH VA KIRISH OYNASI (AUTH & REGISTER MODAL)-->
+  <!-- ======================================================== -->
+  <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" hidden>
+    <div class="modal-card auth-modal-card">
+      <div class="modal-header auth-modal-header">
+        <div class="auth-brand-badge">
+          <img src="qardu-xabarlari.png" alt="QarDU" class="auth-emblem">
+          <div>
+            <h3 class="modal-title" id="authModalTitle" data-i18n="authModalTitle">QarDU Xabarlari</h3>
+            <span class="auth-modal-sub" data-i18n="authModalSubtitle">Elektron tahririyat va mualliflar kabineti</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="btnCloseAuthModal" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Navigation tabs between Kirish (Login) and Ro'yxatdan o'tish (Register) -->
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab-btn active" id="tabBtnLogin" data-tab="login">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
+          <span data-i18n="tabLogin">Tizimga kirish</span>
+        </button>
+        <button type="button" class="auth-tab-btn" id="tabBtnRegister" data-tab="register">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          <span data-i18n="tabRegister">Ro'yxatdan o'tish</span>
+        </button>
+      </div>
+
+      <div class="modal-body auth-modal-body">
+
+        <!-- ======================= -->
+        <!-- TAB 1: KIRISH (LOGIN)   -->
+        <!-- ======================= -->
+        <div class="auth-tab-pane active" id="paneLogin">
+          <!-- Google Auth Button -->
+          <button type="button" class="btn-google-auth" id="btnGoogleLogin">
+            <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+              <path fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            <span data-i18n="googleLoginText">Google orqali kirish</span>
+          </button>
+
+          <!-- Divider -->
+          <div class="auth-divider">
+            <span data-i18n="orEmailText">yoki elektron pochta orqali</span>
+          </div>
+
+          <!-- Email Login Form -->
+          <form id="loginForm" class="auth-form" novalidate>
+            <div class="form-group">
+              <label for="loginEmail" class="form-label" data-i18n="labelEmailLogin">Elektron pochta</label>
+              <div class="input-icon-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input type="email" id="loginEmail" class="auth-input" placeholder="masalan: author@qardu.uz" required
+                  autocomplete="username">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="loginPassword" class="form-label" data-i18n="labelPassword">Parol</label>
+              <div class="input-icon-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••" required
+                  autocomplete="current-password">
+                <button type="button" class="btn-toggle-pw" id="btnToggleLoginPw" title="Parolni ko'rsatish/yashirish"
+                  aria-label="Toggle password visibility">
+                  <svg class="pw-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-options-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="loginRememberMe" checked>
+                <span data-i18n="labelRememberMe">Meni eslab qol</span>
+              </label>
+              <a href="#forgot" class="forgot-pw-link" id="linkForgotPassword" data-i18n="linkForgotPw">Parolni
+                unutdingizmi?</a>
+            </div>
+
+            <button type="submit" class="btn-auth-submit" id="btnSubmitLogin">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+              </svg>
+              <span data-i18n="btnSignIn">Kirish</span>
+            </button>
+
+            <div class="auth-switch-prompt">
+              <span data-i18n="noAccountText">Hali hisobingiz yo'qmi?</span>
+              <button type="button" class="link-switch-auth" id="btnGoToRegister" data-i18n="goToRegister">Ro'yxatdan
+                o'ting</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- =================================== -->
+        <!-- TAB 2: RO'YXATDAN O'TISH (REGISTER) -->
+        <!-- =================================== -->
+        <div class="auth-tab-pane" id="paneRegister">
+          <!-- Google Auth Button for Register -->
+          <button type="button" class="btn-google-auth" id="btnGoogleRegister">
+            <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+              <path fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            <span data-i18n="googleRegisterText">Google orqali ro'yxatdan o'tish</span>
+          </button>
+
+          <!-- Divider -->
+          <div class="auth-divider">
+            <span data-i18n="orEmailText">yoki elektron pochta orqali</span>
+          </div>
+
+          <!-- Email Registration Form -->
+          <form id="registerForm" class="auth-form" novalidate>
+            <div class="form-group">
+              <label for="regFullName" class="form-label" data-i18n="labelFullName">Ism va familiyangiz *</label>
+              <div class="input-icon-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <input type="text" id="regFullName" class="auth-input" placeholder="masalan: Alisher Oripov" required
+                  autocomplete="name">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regEmail" class="form-label" data-i18n="labelEmailReg">Elektron pochta *</label>
+              <div class="input-icon-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input type="email" id="regEmail" class="auth-input" placeholder="oripov@qardu.uz" required
+                  autocomplete="email">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regPassword" class="form-label" data-i18n="labelNewPassword">Parol *</label>
+              <div class="input-icon-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input type="password" id="regPassword" class="auth-input" placeholder="Kamida 6 ta belgi" required
+                  autocomplete="new-password">
+                <button type="button" class="btn-toggle-pw" id="btnToggleRegPw" title="Parolni ko'rsatish/yashirish"
+                  aria-label="Toggle password visibility">
+                  <svg class="pw-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regPasswordConfirm" class="form-label" data-i18n="labelConfirmPassword">Parolni tasdiqlang
+                *</label>
+              <div class="input-icon-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input type="password" id="regPasswordConfirm" class="auth-input" placeholder="Parolni takrorlang"
+                  required autocomplete="new-password">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-auth-submit" id="btnSubmitRegister">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+              <span data-i18n="btnRegisterSubmit">Ro'yxatdan o'tish</span>
+            </button>
+
+            <div class="auth-switch-prompt">
+              <span data-i18n="haveAccountText">Allaqachon hisobingiz bormi?</span>
+              <button type="button" class="link-switch-auth" id="btnGoToLogin" data-i18n="goToLogin">Tizimga
+                kiring</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- =================================== -->
+        <!-- TAB 3: PAROLNI TIKLASH (FORGOT PW)  -->
+        <!-- =================================== -->
+        <div class="auth-tab-pane" id="paneForgot">
+          <form id="forgotForm" class="auth-form" novalidate>
+            <p class="forgot-desc" data-i18n="forgotPasswordDesc">
+              Ro'yxatdan o'tgan elektron pochta manzilingizni kiriting. Biz sizga parolni qayta tiklash havolasini
+              yuboramiz.
+            </p>
+            <div class="form-group">
+              <label for="forgotEmail" class="form-label" data-i18n="labelEmailLogin">Elektron pochta</label>
+              <div class="input-icon-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input type="email" id="forgotEmail" class="auth-input" placeholder="masalan: author@qardu.uz" required>
+              </div>
+            </div>
+            <button type="submit" class="btn-auth-submit" id="btnSubmitForgot">
+              <span data-i18n="btnSendResetLink">Tiklash havolasini yuborish</span>
+            </button>
+            <div class="auth-switch-prompt">
+              <button type="button" class="link-switch-auth" id="btnBackToLoginFromForgot" data-i18n="btnBackToLogin">←
+                Kirishga qaytish</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- ADMIN MAQOLA JOYLASH MODALI (ADMIN ARTICLE PUBLISH MODAL)-->
+  <!-- ======================================================== -->
+  <div class="modal-overlay" id="adminArticleModal" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle" hidden>
+    <div class="modal-card admin-modal-card">
+      <div class="modal-header admin-modal-header">
+        <div class="admin-brand-badge">
+          <div class="admin-icon-circle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title" id="adminModalTitle" data-i18n="adminModalTitle">Admin boshqaruv paneli</h3>
+            <span class="admin-modal-sub" data-i18n="adminModalSubtitle">Maqolalar va sayt aloqa sozlamalarini boshqarish</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="btnCloseAdminModal" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Admin Modal Navigation Tabs -->
+      <div class="admin-modal-tabs" role="tablist">
+        <button type="button" class="admin-tab-btn active" id="adminTabBtnArticle" data-tab="article">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+          <span data-i18n="adminTabArticle">Yangi maqola joylash</span>
+        </button>
+        <button type="button" class="admin-tab-btn" id="adminTabBtnContact" data-tab="contact">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+          <span data-i18n="adminTabContact">Aloqa va ijtimoiy tarmoq sozlamalari</span>
+        </button>
+      </div>
+
+      <div class="modal-body admin-modal-body">
+        <!-- PANE 1: PUBLISH ARTICLE -->
+        <div class="admin-tab-pane active" id="adminPaneArticle">
+          <form id="adminArticleForm" class="admin-form" novalidate>
+          <!-- Article Title -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminTitle" class="admin-label" data-i18n="adminFieldTitle">Maqola nomi *</label>
+            <input type="text" id="adminTitle" class="admin-input" placeholder="Maqola nomini kiriting..." required>
+          </div>
+
+          <!-- Authors -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminAuthors" class="admin-label" data-i18n="adminFieldAuthors">Muallif(lar) *</label>
+            <input type="text" id="adminAuthors" class="admin-input" placeholder="A.R. Oripov; S.T. Berdiyev" required>
+          </div>
+
+          <!-- Passport Grid: 2 columns -->
+          <div class="admin-grid-2">
+            <div class="admin-form-group">
+              <label for="adminPubType" class="admin-label" data-i18n="adminFieldPubType">Nashr turi</label>
+              <input type="text" id="adminPubType" class="admin-input" placeholder="Jurnal maqolasi" value="Jurnal maqolasi">
+            </div>
+            <div class="admin-form-group">
+              <label for="adminPubYear" class="admin-label" data-i18n="adminFieldPubYear">Nashr yili *</label>
+              <input type="number" id="adminPubYear" class="admin-input" placeholder="2025" required>
+            </div>
+            <div class="admin-form-group">
+              <label for="adminVolIssue" class="admin-label" data-i18n="adminFieldVolIssue">Tom, Son</label>
+              <input type="text" id="adminVolIssue" class="admin-input" placeholder="74, 2">
+            </div>
+            <div class="admin-form-group">
+              <label for="adminPagination" class="admin-label" data-i18n="adminFieldPagination">Sahifalar</label>
+              <input type="text" id="adminPagination" class="admin-input" placeholder="145-158">
+            </div>
+            <div class="admin-form-group">
+              <label for="adminArticleType" class="admin-label" data-i18n="adminFieldArticleType">Maqola turi</label>
+              <input type="text" id="adminArticleType" class="admin-input" placeholder="Ilmiy maqola" value="Ilmiy maqola">
+            </div>
+            <div class="admin-form-group">
+              <label for="adminUDC" class="admin-label" data-i18n="adminFieldUDC">UDK</label>
+              <input type="text" id="adminUDC" class="admin-input" placeholder="330.341.1:004.89">
+            </div>
+          </div>
+
+          <!-- DOI -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminDOI" class="admin-label" data-i18n="adminFieldDOI">DOI</label>
+            <input type="text" id="adminDOI" class="admin-input" placeholder="https://doi.org/10.59272/qardu.2025.x.xx">
+          </div>
+
+          <!-- Keywords -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminKeywords" class="admin-label" data-i18n="adminFieldKeywords">Kalit so'zlar (vergul bilan ajratib yozing)</label>
+            <input type="text" id="adminKeywords" class="admin-input" placeholder="raqamli iqtisodiyot, sun'iy intellekt, innovatsiya">
+          </div>
+
+          <!-- Abstract -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminAbstract" class="admin-label" data-i18n="adminFieldAbstract">Annotatsiya *</label>
+            <textarea id="adminAbstract" class="admin-textarea" rows="5" placeholder="Maqola annotatsiyasini kiriting..." required></textarea>
+          </div>
+
+          <!-- File Upload (PDF Only) -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminFileUpload" class="admin-label" data-i18n="adminFieldFile">PDF fayl yuklash</label>
+            <div class="admin-file-upload-area">
+              <input type="file" id="adminFileUpload" class="admin-file-input" accept=".pdf,application/pdf">
+              <div class="admin-file-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                <span id="adminFileStatusText">Faqat PDF (.pdf) formatdagi faylni tanlang</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="admin-form-actions">
+            <button type="button" class="btn-admin-cancel" id="btnCancelAdmin" data-i18n="adminBtnCancel">Bekor qilish</button>
+            <button type="submit" class="btn-admin-publish" id="btnPublishArticle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span data-i18n="adminBtnPublish">Maqolani joylash</span>
+            </button>
+          </div>
+        </form>
+      </div> <!-- /#adminPaneArticle -->
+
+      <!-- PANE 2: CONTACT & SOCIAL MEDIA SETTINGS -->
+      <div class="admin-tab-pane" id="adminPaneContact" style="display: none;">
+        <form id="adminContactForm" class="admin-form" novalidate>
+          <div class="admin-form-alert">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span data-i18n="adminContactAlertText">Ushbu sozlamalar Bosh sahifaning pastki qismidagi rasmiy kanallar va bog'lanish blokida darhol yangilanadi.</span>
+          </div>
+
+          <!-- Telegram -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminContactTelegram" class="admin-label" data-i18n="adminFieldTelegram">Telegram kanali (havola yoki @username) *</label>
+            <div class="admin-input-group">
+              <span class="admin-input-icon admin-input-icon--tg">✈️</span>
+              <input type="text" id="adminContactTelegram" class="admin-input" placeholder="https://t.me/qardu_xabarlari" value="https://t.me/qardu_xabarlari" required>
+            </div>
+            <small class="admin-field-hint">Masalan: <code>https://t.me/qardu_xabarlari</code> yoki <code>@qardu_xabarlari</code></small>
+          </div>
+
+          <!-- Instagram -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminContactInstagram" class="admin-label" data-i18n="adminFieldInstagram">Instagram sahifasi (havola yoki @username) *</label>
+            <div class="admin-input-group">
+              <span class="admin-input-icon admin-input-icon--insta">📸</span>
+              <input type="text" id="adminContactInstagram" class="admin-input" placeholder="https://instagram.com/qardu_uz" value="https://instagram.com/qardu_uz" required>
+            </div>
+            <small class="admin-field-hint">Masalan: <code>https://instagram.com/qardu_uz</code> yoki <code>@qardu_uz</code></small>
+          </div>
+
+          <!-- Phone Number -->
+          <div class="admin-form-group admin-form-group--full">
+            <label for="adminContactPhone" class="admin-label" data-i18n="adminFieldPhone">Bog'lanish uchun telefon raqami *</label>
+            <div class="admin-input-group">
+              <span class="admin-input-icon admin-input-icon--phone">📞</span>
+              <input type="text" id="adminContactPhone" class="admin-input" placeholder="+998 (75) 221-00-55" value="+998 (75) 221-00-55" required>
+            </div>
+            <small class="admin-field-hint">Masalan: <code>+998 (75) 221-00-55</code> yoki <code>+998 90 123-45-67</code></small>
+          </div>
+
+          <!-- Actions -->
+          <div class="admin-form-actions">
+            <button type="button" class="btn-admin-cancel" id="btnCancelContactAdmin" data-i18n="adminBtnCancel">Bekor qilish</button>
+            <button type="submit" class="btn-admin-publish" id="btnSaveContactSettings">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span data-i18n="adminBtnSaveContacts">Sozlamalarni saqlash</span>
+            </button>
+          </div>
+        </form>
+      </div>
+      </div>
+    </div>
+  <!-- Articles List Modal -->
+  <div class="modal-overlay" id="articlesListModal" role="dialog" aria-modal="true" aria-labelledby="articlesModalTitle" hidden>
+    <div class="modal-card articles-modal-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <div>
+            <h3 class="modal-title" id="articlesModalTitle" data-i18n="articlesModalTitle">Barcha maqolalar</h3>
+            <span class="modal-subtitle" data-i18n="articlesModalSubtitle">QarDU Xabarlari ilmiy jurnali maqolalari to'plami</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="btnCloseArticlesModal" aria-label="Close">&times;</button>
+      </div>
+      <div class="articles-list-container" id="articlesListContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-notification" id="toastNotification" role="alert" aria-live="polite">
+    <span class="toast-icon">✓</span>
+    <span class="toast-message" id="toastMessage">Nusxa olindi!</span>
+  </div>
+
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
