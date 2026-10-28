@@ -2945,10 +2945,13 @@ ER  - `;
     if (window.supabaseClient) {
       showToast("Google orqali kirilmoqda...");
       try {
+        const redirectOrigin = (window.location.origin && !window.location.origin.includes('localhost'))
+          ? window.location.origin
+          : 'https://qardu-xabarlari.vercel.app';
         const { error } = await window.supabaseClient.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin + window.location.pathname
+            redirectTo: redirectOrigin + (window.location.pathname || '/')
           }
         });
         if (error) {
@@ -3151,8 +3154,11 @@ ER  - `;
 
     if (window.supabaseClient) {
       try {
+        const redirectOrigin = (window.location.origin && !window.location.origin.includes('localhost'))
+          ? window.location.origin
+          : 'https://qardu-xabarlari.vercel.app';
         const { error } = await window.supabaseClient.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + window.location.pathname
+          redirectTo: redirectOrigin + (window.location.pathname || '/')
         });
         if (error) {
           showToast("Xatolik: " + error.message);
@@ -3825,6 +3831,17 @@ ER  - `;
     renderArticlesStream();
   }
 
+  function checkHashRoute() {
+    if (window.location.hash === '#admin') {
+      if (isAdminLoggedIn()) {
+        openAdminModal();
+      } else {
+        openAuthModal('login');
+        showToast("Admin boshqaruv paneliga kirish uchun xabarlariqardu@gmail.com hisobiga kiring.");
+      }
+    }
+  }
+
   // Initial render & state restoration
   loadCustomArticles().then(() => {
     updateStaticTranslations();
@@ -3833,9 +3850,11 @@ ER  - `;
     } else {
       showHomeView();
     }
+    checkHashRoute();
   }).catch(() => {
     updateStaticTranslations();
     showHomeView();
+    checkHashRoute();
   });
 
   window.addEventListener('hashchange', () => {
@@ -3843,6 +3862,8 @@ ER  - `;
       showArticlesView();
     } else if (window.location.hash === '#home' || !window.location.hash) {
       showHomeView();
+    } else if (window.location.hash === '#admin') {
+      checkHashRoute();
     }
   });
 
