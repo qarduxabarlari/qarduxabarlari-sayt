@@ -1,6 +1,6 @@
 # QarDU Xabarlari — Ilmiy-Nazariy va Uslubiy Jurnal Veb-Platformasi
 
-> **Ushbu hujjat loyihaning to'liq arxitekturasi, bajarilgan ishlar xotirasi, hozirgi holati va kelgusi agentlar/dasturchilar uchun ko'rsatmalarni o'z ichiga oladi.**
+> **Ushbu hujjat loyihaning to'liq arxitekturasi, bajarilgan ishlar xotirasi, qilingan to'g'ri va noto'g'ri ishlar tahlili, hozirgi holati va kelgusi agentlar/dasturchilar uchun ko'rsatmalarni o'z ichiga oladi.**
 
 ---
 
@@ -9,140 +9,131 @@
 - **Nomi**: QarDU Xabarlari (Bulletin of Karshi State University)
 - **Muassasa**: Qarshi Davlat Universiteti rasmiy ilmiy nashri
 - **Yo'nalishi**: OAK e'tirof etgan ilmiy-nazariy va uslubiy jurnal platformasi
-- **Mahalliy server**: `http://localhost:3000`
+- **Ishlab chiqarish (Production) domeni**: `https://qardu-xabarlari.vercel.app`
+- **Mahalliy server**: `http://localhost:3000` (`node local-server.js`)
+- **Git Repozitoriy**: `https://github.com/qarduxabarlari/qarduxabarlari-sayt.git`
+- **Git Mualliflik talabi**: Har doim `qarduxabarlari <xabarlariqardu@gmail.com>` nomi bilan commit va push qilinadi.
 - **Fayllar tarkibi**:
-  - `index.html` — Asosiy HTML tuzilmasi, maqola pasporti, annotatsiya, modallar (avtorizatsiya, PDF mutolaa, iqtibos olish, ulashish, admin panel, barcha maqolalar ro'yxati).
-  - `app.js` — Barcha dinamik mantiq, ko'p tillilik (UZ, RU, EN), avtorizatsiya, admin maqola joylash, IndexedDB xotirasi, PDF generatsiya va yuklab olish.
-  - `styles.css` — Maxsus akademik dizayn tizimi (Vanilla CSS, zamonaviy shriftlar, BirdsNZ jurnali uslubidagi toza metadata jadvallari).
+  - `index.html` — Asosiy HTML tuzilmasi, Bosh sahifa (Hero va Karusel), Maqolalar bo'limi, Arxiv bo'limi, Aloqa sozlamalari, pasport, modallar.
+  - `app.js` — Barcha frontend mantiq, ko'p tillilik (UZ, RU, EN), avtorizatsiya, admin panel, karusel qadash, arxivlash, IndexedDB va Supabase integratsiyasi.
+  - `styles.css` — Maxsus akademik dizayn tizimi (Vanilla CSS, BirdsNZ jurnali uslubidagi toza metadata jadvallari, responsiv mobil dizayn).
   - `supabase-client.js` — Supabase SDK v2 ulanishi va konfiguratsiyasi.
+  - `schema.sql` — Supabase PostgreSQL jadvallari, RLS siyosatlari va migratsiyalar.
+  - `local-server.js` — Mahalliy test qilish uchun sof Node.js HTTP serveri.
   - `qardu-xabarlari.png` — Jurnal rasmiy logotipi / gerbi.
 
 ---
 
 ## 2. Texnologik Stek
 
-1. **Frontend Core**: Sof HTML5 va JavaScript (ES6+ Vanilla). Frameworklarsiz tez va yengil ishlaydi.
-2. **Styling**: Vanilla CSS (TailwindCSS ishlatilmaydi).
+1. **Frontend Core**: Sof HTML5 va JavaScript (ES6+ Vanilla). Frameworklarsiz o'ta tez va barqaror ishlaydi.
+2. **Styling**: Sof Vanilla CSS (TailwindCSS yoki tashqi CSS frameworklar ishlatilmaydi).
 3. **Database & Auth**: Supabase (PostgreSQL + Supabase Auth).
    - **URL**: `https://vmzbgcgcafptdgwdarsm.supabase.co`
    - **Anon Key**: `supabase-client.js` faylida sozlangan.
 4. **Fayllarni Saqlash (PDF Engine)**:
-   - Brauzerning **IndexedDB** (`qardu_academic_db` -> `pdf_files`) — yuklangan asl `.pdf` fayllarni sahifa yangilanganda ham yo'qotmay saqlash uchun.
+   - Brauzerning **IndexedDB** (`qardu_academic_db` -> `pdf_files`) — yuklangan asl `.pdf` fayllarni doimiy saqlash uchun.
    - **Base64 / Memory Cache** (`ARTICLE_FILES`) — tezkor zaxira va darhol yuklab olish uchun.
    - **Haqiqiy PDF 1.4 Generator** — agar maqolaga fayl biriktirilmagan bo'lsa, avtomatik rasmiy `.pdf` generatsiya qilib beruvchi sof JS moduli. Hech qachon `.txt` yuklanmaydi.
 
 ---
 
-## 3. Bajarilgan Ishlar Xronologiyasi (Xotira)
+## 3. Sayt Arxitekturasi va Bo'limlar Tuzilishi
 
-### A. Dizayn va Ko'p Tillilik
-1. Jurnal uchun zamonaviy, jiddiy akademik dizayn yaratildi.
-2. Tilni o'zgartirish bloki (UZ / RU / EN) ixcham ko'rinishga keltirildi.
-3. BirdsNZ ilmiy jurnali andozasida maqola pasporti (zebra-jadval), annotatsiya va ilovalar bloki tayyorlandi.
-4. Foydalanuvchi talabiga binoan saytning pastki qismi (footer) butunlay olib tashlandi.
-5. Maqola pasportidagi takroriy yozuvlar va rasmdagi ortiqcha qismlar foydalanuvchi ko'rsatmasi bo'yicha tozalandi.
-
-### B. Admin Tizimi va Maqola Joylash
-1. **Admin elektron pochtasi**: `xabarlariqardu@gmail.com`.
-2. Ushbu pochta bilan kirilganda sayt boshqaruvida maxsus **"Maqola joylash"** tugmasi paydo bo'ladi.
-3. Oddiy foydalanuvchilar faqat maqolalarni o'qishi, iqtibos olishi va PDF formatda yuklab olishi mumkin.
-4. Admin panelida yangi maqola kiritish modal oynasi yaratildi:
-   - Maqola nomi (Title)
-   - Muallif(lar) (Authors)
-   - Nashr turi (Publication Type), Nashr yili (Year), Tom/Son (Volume/Issue), Sahifalar (Pagination)
-   - Maqola turi (Article Type), DOI havolasi, UDK indeksi
-   - Kalit so'zlar (Keywords)
-   - Annotatsiya (Abstract)
-   - **Fayl yuklash**: Faqat va faqat `.pdf` format qabul qilinadi (`accept=".pdf,application/pdf"`).
-
-### C. Shablon (Namuna) Maqolalarni Butunlay O'chirish
-1. Avval sinov uchun kiritilgan statik maqolalar (`art-1`, `art-2`, `art-3`) `app.js` dan butunlay o'chirildi (`ARTICLES = {}`).
-2. Sayt ochilganda agar hali maqola joylanmagan bo'lsa, xatolik chiqmasdan toza "Bo'sh holat" (Empty State) ko'rinadi:
-   - Sarlavhada: *"Hozircha saytda maqolalar mavjud emas"*.
-   - Pasport va annotatsiya bloklari yashirilib, admin uchun qulay yo'riqnoma ko'rsatiladi.
-   - "Barcha maqolalar" modalida ham toza bo'sh holat xabari chiqadi.
-
-### D. PDF Yuklab Olish Muammosini Hal Qilish
-1. **Muammo**: Avval yuklangan PDF fayl faqat vaqtinchalik `blob:` URL sifatida saqlangani uchun sahifa yangilanganda havola kuyib ketar va "Yuklab olish" tugmasi ishlamay qolardi.
-2. **Yechim**:
-   - Brauzerning doimiy `IndexedDB` xotirasiga to'liq binar fayl sifatida saqlash yo'lga qo'yildi.
-   - Kichik hajmli fayllar uchun `Base64` zaxirasi qo'shildi.
-   - Yuklab olish tugmasi semantik `<button type="button">` ga aylantirildi.
-   - Har qanday holatda ham (hatto faylsiz kiritilgan eski maqolalar uchun ham) `.txt` emas, faqat haqiqiy `.pdf` fayl shakllantirilib yuklanadi.
-
----
-
-## 4. Hozirgi Holat va Database Tuzilishi
-
-### Supabase Database Tekshiruvi Natijalari:
-- **Mavjud jadvallar**:
-  1. `articles`
-  2. `profiles`
-- **`articles` jadvalining aniqlangan ustunlari (Schema)**:
-  - `id` (Primary Key, uuid / serial)
-  - `created_at` (timestamp)
-  - `title_uz` (text) — Maqola nomi (O'zbekcha)
-  - `title_ru` (text) — Maqola nomi (Ruscha)
-  - `title_en` (text) — Maqola nomi (Inglizcha)
-  - `abstract_uz` (text) — Annotatsiya (O'zbekcha)
-  - `abstract_ru` (text) — Annotatsiya (Ruscha)
-  - `abstract_en` (text) — Annotatsiya (Inglizcha)
-  - `keywords_uz` (text / array) — Kalit so'zlar (O'zbekcha)
-  - `keywords_ru` (text / array) — Kalit so'zlar (Ruscha)
-  - `keywords_en` (text / array) — Kalit so'zlar (Inglizcha)
-  - `doi` (text) — DOI raqami
-  - `pdf_url` (text) — PDF fayl manzili
-  - `metrics` (jsonb / integer) — Statistika (views, downloads)
-
-- **`profiles` jadvalining ustunlari**:
-  - `id`, `created_at`, `email`, `full_name`, `role`, `avatar_url`
-
----
-
-## 5. Bosh Sahifa (BirdsNZ Uslubidagi Karusel va Maqolalar Oqimi)
-
-### Yaratilgan Komponentlar va Arxitektura:
-1. **BirdsNZ Bosh Sahifa Banneri (`c-page-header__homepage`)**:
-   - Chap ustun: QarDU Xabarlari nomi, OAK/ISSN indeksi, jurnal missiyasi va "Maqolalar bilan tanishish →" hamda "Maqola topshirish" tugmalari.
-   - O'ng ustun: **Dinamik avto-karusel (`c-homeCarousel`)** — maqolalarni BirdsNZ andozasidagi sarlavha foni (`c-homeCarousel__slide--title-highlight`), mualliflar, sana va "Batafsil o'qish →" tugmasi bilan 5.5 soniyada ketma-ket almashtirib turadi (sichqoncha olib borilganda to'xtaydi, o'qlar va nuqtalar orqali ham boshqariladi).
-2. **Akademik E'tirof va Metrikalar Tasmasi (`c-journal-badges`)**:
-   - OAK e'tirof etgan nashr
-   - CrossRef DOI a'zosi (`10.59272/qardu`)
-   - Xalqaro ilmiy indekslar (Google Scholar, Index Copernicus)
-   - Open Access (CC BY 4.0 ochiq litsenziya)
-3. **Ketma-ket Maqolalar Oqimi ("So'nggi nashr etilgan maqolalar")**:
+### A. Ko'rinishlar (Views) Boshqaruvi
+Sayt bitta sahifali (SPA) arxitekturada ishlaydi va URL hash (`#home`, `#publications`, `#archive`, `#contacts`, `#admin`) orqali dinamik almashadi:
+1. **`#homeView` (Bosh sahifa)**:
+   - BirdsNZ uslubidagi Hero bloki va avto-aylanuvchi suzuvchi Karusel (Bosh panel).
+   - Jurnal haqida qisqacha ma'lumot va OAK akkreditatsiyasi.
+   - Rasmiy kanallar va aloqa bloki (Telegram, Instagram, Telefon, Pochta, Manzil).
+   - *Eslatma*: Bosh sahifada maqolalar oqimi ko'rinmaydi (faqat karuselda qadalgan 10 tagacha maqola chiqadi).
+2. **`#articlesView` (Maqolalar bo'limi)**:
+   - Jonli qidiruv va toifalar bo'yicha saralash filtrlari.
    - Maqolalar ketma-ket kartochkalar ko'rinishida chiqariladi.
-   - Toifalar bo'yicha saralash tugmalari: *Barchasi, Tabiiy fanlar va ekologiya, Axborot texnologiyalari va AI, Iqtisodiyot va innovatsiyalar, Tarix va filologiya*.
-   - Tezkor qidiruv maydoni (jonli filtr).
-   - Har bir maqolada: toifa nishoni, son/tom, DOI, to'liq sarlavha, mualliflar, annotatsiya qisqartmasi, kalit so'zlar teglari, "Maqolani o'qish (Pasport & Annotatsiya)", "PDF yuklab olish", "Iqtibos" va "Ulashish" tugmalari.
-4. **Sahifalar O'rtasida O'tish (View Switcher)**:
-   - `showHomeView()`: Bosh sahifani (karusel va maqolalar oqimini) ko'rsatadi.
-   - `showArticleDetailView(id)`: Tanlangan maqola pasporti va to'liq annotatsiya sahifasini ochadi.
-   - `btnBackToHome`: Maqola sahifasidan orqaga — Bosh sahifaga qaytaradi.
-5. **Ko'p Tillilik (UZ, RU, EN)**:
-   - Bosh sahifadagi barcha matnlar, sarlavhalar, tugmalar va metrikalar til tanlanganda darhol tarjima qilinadi.
+   - Admin uchun har bir maqola kartochkasi ostida boshqaruv paneli joylashgan: **Qadash / Qadashni bekor qilish**, **Arxivlash**, **O'chirish**.
+3. **`#archiveView` (Arxiv bo'limi — Faqat Admin uchun)**:
+   - Arxivlangan barcha maqolalar ro'yxati.
+   - Har bir maqolada: **«Qayta chiqarish (Tiklash)»** va **«Butunlay o'chirish»** tugmalari.
+4. **`#contactsSettingsView` (Aloqa sozlamalari — Faqat Admin uchun)**:
+   - Telegram, Instagram, Telefon, Pochta va Manzilni to'g'ridan-to'g'ri o'zgartirish va saqlash sahifasi.
+5. **`#articleDetailView` (Maqola tafsilotlari)**:
+   - Maqola pasporti (DOI, UDK, mualliflar, sana, toifa, sahifalar), to'liq annotatsiya, iqtibos olish va PDF yuklab olish.
+
+### B. Yuqori Menyu (Navbar) Qoidasi
+- **Oddiy foydalanuvchilar va mehmonlar uchun**:
+  `Bosh sahifa` | `Maqolalar`
+- **Admin (`xabarlariqardu@gmail.com`) kirganda**:
+  `Bosh sahifa` | `Maqolalar` | `Arxiv (soni)` | `Aloqa sozlamalari`
 
 ---
 
-## 7. Aloqa, Ijtimoiy Tarmoqlar va Menyu Yangilanishi (2026-yil oktyabr)
+## 4. Qilingan To'g'ri va Noto'g'ri Ishlar Tahlili (Lessons Learned & Postmortem)
 
-1. **Menyu Qisqartirildi**:
-   - Foydalanuvchi talabi bilan yuqori menyudan ortiqcha bandlar (*Jurnal haqida, Tahririyat hay'ati, Arxiv, Mualliflarga, Indekslanish, Aloqa*) o'chirildi.
-   - Menyuda faqat ikkita asosiy yo'nalish qoldirildi: **Bosh sahifa** va **Maqolalar**.
-2. **Bosh Sahifaning Pastki Qismiga Rasmiy Kanallar va Aloqa Bloki (`c-journal-contact-section`)**:
-   - **Telegram kanali**: to'g'ridan-to'g'ri havola (`linkSocialTelegram`) va ko'rinuvchi `@username` (`displaySocialTelegram`).
-   - **Instagram sahifasi**: to'g'ridan-to'g'ri havola (`linkSocialInstagram`) va ko'rinuvchi `@username` (`displaySocialInstagram`).
-   - **Telefon raqami**: to'g'ridan-to'g'ri qo'ng'iroq qilish havolasi `tel:` (`linkSocialPhone`) va formatlangan raqam (`displaySocialPhone`).
-   - Barcha bloklar 3 ta tilda (UZ / RU / EN) moslashuvchan.
-3. **Admin Panel Muhitiga Bog'lanishi**:
-   - Admin (`xabarlariqardu@gmail.com`) tizimga kirganida:
-     - Admin modalida 2 ta qulay tab mavjud: **«Yangi maqola joylash»** va **«Aloqa va ijtimoiy tarmoq sozlamalari»**.
-     - Bosh sahifadagi aloqa blokida ham maxsus **«Aloqani tahrirlash»** tezkor tugmasi paydo bo'ladi.
-     - Admin Telegram, Instagram havolalarini va telefon raqamini kiritib, "Sozlamalarni saqlash" tugmasini bosishi bilan ma'lumotlar saqlanadi va saytda bir zumda real vaqtda yangilanadi.
+> **Ushbu bo'lim loyihada yo'l qo'yilgan barcha texnik xatoliklar, ularning ildiz sabablari, qanday bartaraf etilgani va qilingan to'g'ri yechimlarning to'liq hisobotidir.**
+
+### 4.1. To'g'ri va Muvaffaqiyatli Qilingan Ishlar
+
+1. **Vanilla Stack tanlovi**: Frameworklarsiz (React/Vue/Next ishlatmasdan) sof HTML, JS va CSS asosida qurilgani tufayli sayt Vercel-da soniyaning ulushlarida yuklanadi, hech qanday og'ir build jarayoni talab qilinmaydi.
+2. **IndexedDB va Base64 orqali PDF saqlash**: Tashqi server bo'lmagan sharoitda ham brauzer ichida haqiqiy binar `.pdf` fayllarni xotirada qoldirish va uzluksiz yuklab olish imkoniyati yaratildi.
+3. **Maqolalarni bosh sahifadan alohida bo'limga ko'chirish**: Bosh sahifaning ortiqcha yuklanishining oldi olindi va ilmiy jurnal talablariga mos toza, jiddiy ko'rinishga keltirildi.
+4. **Har bir maqolaga to'g'ridan-to'g'ri boshqaruv tugmalarini o'rnatish**: Admin endi alohida modal tablarga kirmaydi — to'g'ridan-to'g'ri "Maqolalar" bo'limida har bir maqolani bitta tugma bilan Bosh panelga qadashi, arxivlashi yoki o'chirishi mumkin.
+5. **Arxiv va Aloqa bo'limlarini bosh menyuga o'tkazish**: Admin tajribasi (UX) keskin yaxshilandi, admin modali esa faqat "Yangi maqola joylash" uchun ixcham holatga keltirildi.
 
 ---
 
-## 8. Foydalanuvchi Ko'rsatmalari (Qayta Eslatma)
-1. **Fayl formati**: Yuklanadigan maqolalar FAQAT `.pdf` formatda bo'lishi shart.
-2. **Admin elektron pochtasi**: `xabarlariqardu@gmail.com`.
-3. **Muloqot tili**: Foydalanuvchi bilan o'zbek tilida, qisqa va aniq muloqot qiling.
+### 4.2. Yuzaga Kelgan Xatoliklar, Noto'g'ri Yondashuvlar va Ularning Yechimlari
+
+#### ❌ 1-Xatolik: Vercel Serverless Function Interception (500 FUNCTION_INVOCATION_FAILED)
+- **Nima yuz berdi**: Sayt Vercel-ga deploy qilinganda bosh sahifada `500: FUNCTION_INVOCATION_FAILED` xatoligi chiqib, sahifa ochilmay qoldi.
+- **Ildiz sababi**: Loyiha ildiz papkasida `server.js` nomli fayl bor edi. Vercel uni ko'rib, Node.js serverless funksiya deb hisoblagan va statik `index.html` o'rniga `server.js` ni ishga tushirishga uringan, natijada serverless funksiya crash bo'lgan.
+- **Tuzatish**: `server.js` fayli `local-server.js` ga o'zgartirildi va `vercel.json` faylida `"outputDirectory": "."` qilib statik hosting qat'iy belgilandi.
+
+#### ❌ 2-Xatolik: Vercel Build Script xatosi ([STATIC_BUILD_NO_OUT_DIR])
+- **Nima yuz berdi**: Vercel build loglarida `No Output Directory named "public" found` xatosi chiqdi.
+- **Ildiz sababi**: `package.json` da `"build": "echo 'Static site ready'"` buyrug'i bor edi. Vercel build skripti mavjudligini ko'rgach, standart "public" papkasini qidirgan, loyiha esa ildiz (`.`) papkada joylashgan edi.
+- **Tuzatish**: `package.json` dagi keraksiz `"build"` skripti o'chirildi va `vercel.json` da statik konfiguratsiya tozalandi.
+
+#### ❌ 3-Xatolik: Git mualliflik pochtasi adashuvi
+- **Nima yuz berdi**: Foydalanuvchi asosiy shaxsiy pochtasi (`dilmurodovumid170@gmail.com`) commits tarixiga kirib qolganini payqab e'tiroz bildirdi.
+- **Ildiz sababi**: Dastlabki git commitlar local git global konfiguratsiyasi orqali yuborilgan.
+- **Tuzatish**: Loyihaning barcha git operatsiyalari qat'iy ravishda quyidagi parametrlar bilan bajariladigan qilindi:
+  `git -c user.name="qarduxabarlari" -c user.email="xabarlariqardu@gmail.com" commit`
+  Foydalanuvchining shaxsiy pochtasi loyiha commits tarixidan butunlay ajratildi.
+
+#### ❌ 4-Xatolik: Google OAuth orqali kirganda `localhost:3000` ga qaytib ketishi (Redirect Loop)
+- **Nima yuz berdi**: Foydalanuvchi `https://qardu-xabarlari.vercel.app` saytida turib "Google orqali kirish"ni bosganida, tizim uni `http://localhost:3000` ga yo'naltirib yubordi.
+- **Ildiz sababi**: Supabase Auth boshqaruv panelida birlamchi **Site URL** `http://localhost:3000` qilib qoldirilgan va **Redirect URLs** oq ro'yxatiga `https://qardu-xabarlari.vercel.app` kiritilmagan bo'lgan. Supabase begona domenga redirect qilishni bloklab, avtomatik ravishda o'zining default Site URL manziliga tashlagan.
+- **Tuzatish**:
+  1. `app.js` da `redirectTo` manzili avtomatik ravishda `https://qardu-xabarlari.vercel.app` ni aniq ko'rsatadigan qilindi.
+  2. Supabase URL Configuration sozlamalarida Site URL va Redirect URLs Vercel domeniga moslab berildi.
+  3. Foydalanuvchiga redirectsiz parol orqali to'g'ridan-to'g'ri kirish yo'li ko'rsatildi.
+
+#### ❌ 5-Xatolik: Test maqolani tozalashda foydalanuvchining o'z maqolalari o'chib ketishi
+- **Nima yuz berdi**: Foydalanuvchi yangi maqola yaratib arxivlaganda, sahifa yangilanishi bilan maqola xotiradan g'oyib bo'ldi.
+- **Ildiz sababi**: Avvalgi bosqichda sinov uchun ochilgan test maqolani tozalash maqsadida `isTestArticle()` filtri qo'shilgan edi:
+  `auth.includes('umid dilmurodov')`
+  Loyihachi / foydalanuvchining haqiqiy ismi Umid Dilmurodov bo'lgani sababli, u o'z ismi bilan maqola yaratganda, ushbu filtr uni "test maqola" deb o'ylab `localStorage` dan o'chirib yuborgan!
+- **Tuzatish**: `isTestArticle` filtridan muallif ismi butunlay olib tashlandi, faqat maxsus test kalitlari (`cewrcwec`, `weecwecwe`) qoldirildi. Foydalanuvchi yaratgan haqiqiy maqolalar saqlanib qoladigan qilindi.
+
+#### ❌ 6-Xatolik: Arxivlangan maqolalarning Arxiv bo'limida chiqmasligi
+- **Nima yuz berdi**: Maqolani "Arxivlash" tugmasi bosilganda umumiy oqimdan yo'qoldi, lekin "Arxiv" bo'limida ko'rinmadi.
+- **Ildiz sababi**: `archiveArticle` funksiyasi yangilangan `#archiveStreamFeed` o'rniga avvalgi modal tabida mavjud bo'lgan, ammo keyinchalik o'chirib tashlangan `#adminArchiveListContainer` ga render qilishga urinayotgan edi. Konteyner topilmagani uchun maqolalar chizilmagan.
+- **Tuzatish**: `archiveArticle`, `restoreArticle` va `deleteArticlePermanent` funksiyalari yangi `#archiveStreamFeed` konteyneriga xizmat qiluvchi `renderArchiveStream()` ga ulandi.
+
+#### ❌ 7-Xatolik: Supabase Database-ga maqola tushmasligi (RLS 401 va Ustunlar xatosi)
+- **Nima yuz berdi**: Foydalanuvchi Supabase Table Editor-da `articles` jadvali bo'sh turganini ko'rdi.
+- **Ildiz sababi**:
+  1. Supabase-dagi `articles` jadvalida faqat 1 dona RLS siyosati (SELECT — o'qish) mavjud bo'lgan. INSERT (qo'shish), UPDATE (arxivlash) va DELETE siyosatlari bo'lmagani sababli Supabase REST API `401: new row violates row-level security policy` xatosi bilan so'rovni rad etgan.
+  2. Supabase jadvalida `is_archived`, `pub_type`, `vol_issue` ustunlari mavjud bo'lmagan (faqat `title_uz`, `abstract_uz` ochilgan edi).
+- **Tuzatish**:
+  1. `schema.sql` to'liq yangilandi: barcha etishmayotgan ustunlar (`is_archived`, `title`, `authors`, va h.k.) qo'shildi hamda SELECT, INSERT, UPDATE, DELETE uchun 4 ta to'liq RLS siyosati yozildi.
+  2. `app.js` da maqola qo'shish kodi ikkala formatga (`title` va `title_uz`, `abstract` va `abstract_uz`) mos keladigan qilib qayta yozildi.
+
+---
+
+## 5. Kelgusi Ishlar Uchun Qat'iy Qoidalar
+
+1. **Git Commit/Push**: Faqat `xabarlariqardu@gmail.com` nomidan qilinadi.
+2. **Framework aralashtirmaslik**: React, Vue, Webpack, Vite yoki og'ir kutubxonalar qo'shilmaydi. Sof Vanilla JS va CSS saqlanadi.
+3. **Fayl formatlari**: Yuklanadigan ilmiy maqolalar FAQAT `.pdf` bo'lishi shart.
+4. **README yangilab borilishi**: Har bir yangi qadam, tuzatilgan xatolik va yangi qo'shilgan funksiya ushbu `README.md` fayliga darhol qayd etib boriladi.
