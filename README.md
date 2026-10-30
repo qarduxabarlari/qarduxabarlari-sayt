@@ -129,19 +129,17 @@ Sayt bitta sahifali (SPA) arxitekturada ishlaydi va URL hash (`#home`, `#publica
   1. `schema.sql` to'liq yangilandi: barcha etishmayotgan ustunlar (`is_archived`, `title`, `authors`, va h.k.) qo'shildi hamda SELECT, INSERT, UPDATE, DELETE uchun 4 ta to'liq RLS siyosati yozildi.
   2. `app.js` da maqola qo'shish kodi ikkala formatga (`title` va `title_uz`, `abstract` va `abstract_uz`) mos keladigan qilib qayta yozildi.
 
-#### ❌ 8-Xatolik: Google OAuth orqali kirganda hech narsa o'zgarmasligi va maxsus Admin sahifasining yo'qligi
-- **Nima yuz berdi**: Admin "Google orqali kirish"ni bosib admin pochtasini tanlaganida, sahifa qaytgach hech qanday o'zgarish bo'lmadi — na admin sahifa ochildi, na xabar chiqdi.
+#### ❌ 8-Xatolik: Google OAuth orqali kirganda sessiyaning o'chib ketishi va admin panelning ochilmasligi
+- **Nima yuz berdi**: Foydalanuvchi Google orqali kirishni bosib admin pochtasini (`xabarlariqardu@gmail.com`) tanlaganda, sahifa yangilanib hech narsa o'zgarmadi va admin panel elementlari ko'rinmadi.
 - **Ildiz sababi**:
-  1. Supabase JS v2 PKCE oqimida URL-ga `?code=...` keladi, ammo kodda `exchangeCodeForSession` chaqirilmagan va `getSession()` `null` qaytargani uchun `localStorage` dagi admin sessiyasi darhol o'chirib yuborilgan.
-  2. Tizimda to'laqonli mustaqil **Admin Boshqaruv Markazi** sahifasi (`#adminDashboardView`) bo'lmagan — login qilganda ham foydalanuvchi Bosh sahifada qolib ketavergan.
-  3. Navbar-da admin uchun to'g'ridan-to'g'ri "Admin panel" tugmasi bo'lmagan.
-  4. Faqat bitta email qat'iy tekshirilgan bo'lib, foydalanuvchi brauzeridagi shaxsiy pochtasi tanlansa tizim uni admin sifatida tanimagan.
+  1. Supabase JS v2 OAuth qaytganda `getSession()` dastlab `null` qaytargani sababli, `localStorage` dagi admin sessiyasi `localStorage.removeItem('qardu_user')` bilan o'chirib yuborilgan.
+  2. PKCE oqimidagi `?code=` almashinuvi (`exchangeCodeForSession`) o'z vaqtida bajarilmagan.
+  3. Foydalanuvchi talab qilmagan alohida dashboard va qo'shimcha emaillar loyihani chalkashtirgan.
 - **Tuzatish**:
-  1. To'laqonli, qulay va zamonaviy **Admin Boshqaruv Markazi** (`#adminDashboardView` / `#admin`) sahifasi yaratildi (Statistika vidjetlari, Bosh panel karuselini boshqarish, Maqola joylash, Arxiv va Aloqa).
-  2. Supabase PKCE OAuth `?code=` avtomatik almashinuvi (`exchangeCodeForSession`) o'rnatildi va `redirectTo` toza qilindi.
-  3. Admin kirgan zahoti avtomatik ravishda `#admin` sahifasiga yo'naltiriladi va yashil xush kelibsiz xabari ko'rsatiladi.
-  4. Adminlar ro'yxatiga ikkala pochta ham kiritildi (`ADMIN_EMAILS = ['xabarlariqardu@gmail.com', 'dilmurodovumid170@gmail.com']`).
-  5. Kirish oynasida 1 ta bosish bilan Admin bo'lib kirish tugmasi (`btnAdminQuickAccess`) va admin parollari bilan kafolatli kirish o'rnatildi.
+  1. **Qat'iy admin cheklovi**: Faqat va faqat `xabarlariqardu@gmail.com` pochtasiga admin huquqi berildi (`const ADMIN_EMAIL = 'xabarlariqardu@gmail.com'`). Barcha boshqa pochtalar olib tashlandi.
+  2. **Asl Admin panel qayta tiklandi**: Alohida dashboard sahifasi va keraksiz tugmalar to'liq tozalndi. Admin panel deganda asosiy sahifadagi barcha admin qo'shimchalari («Maqola joylash» tugmasi, navbardagi «Arxiv» va «Aloqa sozlamalari» bo'limlari, har bir maqoladagi «Bosh panelga qadash / Arxivlash / O'chirish» tugmalari hamda pastdagi «Aloqani tahrirlash» tugmasi) tushuniladi va ular `xabarlariqardu@gmail.com` kirishi bilan darhol faollashadi.
+  3. **Google OAuth va PKCE to'liq to'g'rilandi**: OAuth qaytganda sessiya tozalab yuborilmaydi, `exchangeCodeForSession` va `onAuthStateChange` orqali admin foydalanuvchi aniqlanib, barcha admin elementlari bir zumda jonlanadi.
+  4. **Ro'yxatdan o'tish va Login kafolati**: `xabarlariqardu@gmail.com` bilan Google orqali kirilganda, ro'yxatdan o'tilganda yoki parol orqali kirilganda bir zumda admin imkoniyatlari faollashadi.
 
 ---
 
