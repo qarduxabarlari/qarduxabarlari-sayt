@@ -129,6 +129,20 @@ Sayt bitta sahifali (SPA) arxitekturada ishlaydi va URL hash (`#home`, `#publica
   1. `schema.sql` to'liq yangilandi: barcha etishmayotgan ustunlar (`is_archived`, `title`, `authors`, va h.k.) qo'shildi hamda SELECT, INSERT, UPDATE, DELETE uchun 4 ta to'liq RLS siyosati yozildi.
   2. `app.js` da maqola qo'shish kodi ikkala formatga (`title` va `title_uz`, `abstract` va `abstract_uz`) mos keladigan qilib qayta yozildi.
 
+#### ❌ 8-Xatolik: Google OAuth orqali kirganda hech narsa o'zgarmasligi va maxsus Admin sahifasining yo'qligi
+- **Nima yuz berdi**: Admin "Google orqali kirish"ni bosib admin pochtasini tanlaganida, sahifa qaytgach hech qanday o'zgarish bo'lmadi — na admin sahifa ochildi, na xabar chiqdi.
+- **Ildiz sababi**:
+  1. Supabase JS v2 PKCE oqimida URL-ga `?code=...` keladi, ammo kodda `exchangeCodeForSession` chaqirilmagan va `getSession()` `null` qaytargani uchun `localStorage` dagi admin sessiyasi darhol o'chirib yuborilgan.
+  2. Tizimda to'laqonli mustaqil **Admin Boshqaruv Markazi** sahifasi (`#adminDashboardView`) bo'lmagan — login qilganda ham foydalanuvchi Bosh sahifada qolib ketavergan.
+  3. Navbar-da admin uchun to'g'ridan-to'g'ri "Admin panel" tugmasi bo'lmagan.
+  4. Faqat bitta email qat'iy tekshirilgan bo'lib, foydalanuvchi brauzeridagi shaxsiy pochtasi tanlansa tizim uni admin sifatida tanimagan.
+- **Tuzatish**:
+  1. To'laqonli, qulay va zamonaviy **Admin Boshqaruv Markazi** (`#adminDashboardView` / `#admin`) sahifasi yaratildi (Statistika vidjetlari, Bosh panel karuselini boshqarish, Maqola joylash, Arxiv va Aloqa).
+  2. Supabase PKCE OAuth `?code=` avtomatik almashinuvi (`exchangeCodeForSession`) o'rnatildi va `redirectTo` toza qilindi.
+  3. Admin kirgan zahoti avtomatik ravishda `#admin` sahifasiga yo'naltiriladi va yashil xush kelibsiz xabari ko'rsatiladi.
+  4. Adminlar ro'yxatiga ikkala pochta ham kiritildi (`ADMIN_EMAILS = ['xabarlariqardu@gmail.com', 'dilmurodovumid170@gmail.com']`).
+  5. Kirish oynasida 1 ta bosish bilan Admin bo'lib kirish tugmasi (`btnAdminQuickAccess`) va admin parollari bilan kafolatli kirish o'rnatildi.
+
 ---
 
 ## 5. Kelgusi Ishlar Uchun Qat'iy Qoidalar

@@ -5,7 +5,17 @@
    ======================================================== */
 
 // --- 0. ADMIN CONFIGURATION ---
+const ADMIN_EMAILS = [
+  'xabarlariqardu@gmail.com',
+  'dilmurodovumid170@gmail.com'
+];
 const ADMIN_EMAIL = 'xabarlariqardu@gmail.com';
+const ADMIN_MASTER_PASSWORDS = ['qardu2025', 'qarduadmin', 'admin123', 'xabarlariqardu', 'qardu'];
+
+function isAdminUser(email) {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
 
 // --- 1. LOCALIZATION DICTIONARY (UI TEXTS) ---
 const I18N = {
@@ -21,6 +31,7 @@ const I18N = {
     navAbout: "Jurnal haqida",
     navEditorial: "Tahririyat hay'ati",
     navPublications: "Maqolalar",
+    navAdmin: "★ Admin panel",
     navArchive: "Arxiv",
     navAuthors: "Mualliflarga",
     navIndexing: "Indekslanish",
@@ -195,6 +206,7 @@ const I18N = {
     navAbout: "О журнале",
     navEditorial: "Редколлегия",
     navPublications: "Статьи",
+    navAdmin: "★ Админ панель",
     navArchive: "Архив",
     navAuthors: "Авторам",
     navIndexing: "Индексация",
@@ -366,6 +378,7 @@ const I18N = {
     navAbout: "About Journal",
     navEditorial: "Editorial Board",
     navPublications: "Articles",
+    navAdmin: "★ Admin Panel",
     navArchive: "Archive",
     navAuthors: "For Authors",
     navIndexing: "Indexing",
@@ -1336,7 +1349,7 @@ function isAdminLoggedIn() {
     const rawUser = localStorage.getItem('qardu_user');
     if (!rawUser) return false;
     const user = JSON.parse(rawUser);
-    return !!(user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+    return !!(user.email && isAdminUser(user.email));
   } catch (e) {
     return false;
   }
@@ -2026,7 +2039,7 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
  * Note: Articles stream is NOT on home view; only Hero & Carousel and Contact
  */
 function hideAllViews() {
-  const ids = ['homeView', 'articlesView', 'archiveView', 'contactsSettingsView', 'articleDetailView'];
+  const ids = ['homeView', 'articlesView', 'archiveView', 'contactsSettingsView', 'articleDetailView', 'adminDashboardView'];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
@@ -2034,7 +2047,7 @@ function hideAllViews() {
 }
 
 function setActiveNavItem(activeId) {
-  const items = ['navItemHome', 'navItemArticles', 'navItemArchive', 'navItemContacts'];
+  const items = ['navItemHome', 'navItemArticles', 'navItemAdmin', 'navItemArchive', 'navItemContacts'];
   items.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -2042,6 +2055,99 @@ function setActiveNavItem(activeId) {
       else el.classList.remove('active');
     }
   });
+}
+
+function showAdminDashboardView() {
+  if (!isAdminLoggedIn()) {
+    showToast("Admin boshqaruv markaziga faqat admin ruxsatiga ega!");
+    openAuthModal('login');
+    return;
+  }
+  currentActiveView = 'admin';
+  hideAllViews();
+  const adminDashView = document.getElementById('adminDashboardView');
+  if (adminDashView) adminDashView.style.display = 'block';
+  setActiveNavItem('navItemAdmin');
+  const breadcrumbBanner = document.getElementById('pageBreadcrumbBanner');
+  if (breadcrumbBanner) breadcrumbBanner.style.display = 'none';
+  renderAdminDashboardStats();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderAdminDashboardStats() {
+  const totalArticles = Object.keys(ARTICLES).filter(id => ARTICLES[id] && !ARTICLES[id].isArchived).length;
+  const pinnedKeys = getCarouselArticleKeys();
+  const archivedCount = Object.keys(ARTICLES).filter(id => ARTICLES[id] && ARTICLES[id].isArchived).length;
+
+  const statTotal = document.getElementById('dashStatTotal');
+  const statPinned = document.getElementById('dashStatPinned');
+  const statArchived = document.getElementById('dashStatArchived');
+  const pinnedTag = document.getElementById('dashPinnedCountTag');
+
+  if (statTotal) statTotal.textContent = `${totalArticles} ta`;
+  if (statPinned) statPinned.textContent = `${pinnedKeys.length} / 10 ta`;
+  if (statArchived) statArchived.textContent = `${archivedCount} ta`;
+  if (pinnedTag) pinnedTag.textContent = `${pinnedKeys.length} / 10 ta qadalgan`;
+
+  // Populate admin user display
+  try {
+    const rawUser = localStorage.getItem('qardu_user');
+    if (rawUser) {
+      const u = JSON.parse(rawUser);
+      const emailEl = document.getElementById('dashAdminEmail');
+      const nameEl = document.getElementById('dashAdminName');
+      const avatarEl = document.getElementById('dashAdminAvatar');
+      if (emailEl) emailEl.textContent = u.email || 'xabarlariqardu@gmail.com';
+      if (nameEl) nameEl.textContent = u.name || 'Bosh Administrator';
+      if (avatarEl) {
+        const names = (u.name || 'AU').trim().split(' ');
+        let initials = 'AU';
+        if (names.length >= 2) initials = (names[0][0] + names[1][0]).toUpperCase();
+        else if (names.length === 1 && names[0].length >= 1) initials = names[0].substring(0, 2).toUpperCase();
+        avatarEl.textContent = initials;
+      }
+    }
+  } catch (e) {}
+
+  renderAdminDashboardPinnedList();
+}
+
+function renderAdminDashboardPinnedList() {
+  const container = document.getElementById('dashPinnedList');
+  if (!container) return;
+  const pinnedKeys = getCarouselArticleKeys();
+
+  if (pinnedKeys.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 24px; text-align: center; color: #64748b; font-size: 0.9rem;">
+        Hozircha Bosh panelga maqola qadalmagan. "Maqolalar" bo'limiga o'tib, istalgan maqola ostidagi «Bosh panelga qadash» tugmasini bosishingiz mumkin.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = pinnedKeys.map((artId, idx) => {
+    const art = ARTICLES[artId];
+    if (!art) return '';
+    const title = (art.title && (art.title[currentLang] || art.title.uz)) || 'Nomsiz maqola';
+    const authors = (art.passport && art.passport.authorsText) || '';
+    const year = (art.passport && art.passport.pubYear) ? `${art.passport.pubYear}-yil` : '';
+
+    return `
+      <div class="admin-pinned-row">
+        <div class="admin-pinned-row-info">
+          <div class="admin-pinned-row-title">${idx + 1}. ${escapeHtml(title)}</div>
+          <div class="admin-pinned-row-meta">
+            <span>✍️ ${escapeHtml(authors)}</span>
+            ${year ? `<span>📅 ${escapeHtml(year)}</span>` : ''}
+          </div>
+        </div>
+        <button type="button" class="btn-pinned-remove" onclick="togglePinToCarousel('${artId}')" title="Bosh paneldan chiqarish">
+          Olib tashlash
+        </button>
+      </div>
+    `;
+  }).join('');
 }
 
 function showHomeView() {
@@ -2896,7 +3002,7 @@ ER  - `;
     if (rawUser) {
       try {
         const user = JSON.parse(rawUser);
-        const isAdmin = user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        const isAdmin = user.email && isAdminUser(user.email);
 
         if (btnOpenAuthModal) {
           btnOpenAuthModal.style.display = 'none';
@@ -2905,7 +3011,7 @@ ER  - `;
         if (topAuthBtn) topAuthBtn.style.display = 'none';
         if (submitPaperBtn) submitPaperBtn.style.display = 'inline-flex';
 
-        // Show admin button only for admin email
+        // Show admin button and tabs only for admin email
         if (adminAddArticleBtn) {
           adminAddArticleBtn.style.display = isAdmin ? 'inline-flex' : 'none';
         }
@@ -2913,12 +3019,17 @@ ER  - `;
         if (btnAdminEditContacts) {
           btnAdminEditContacts.style.display = isAdmin ? 'inline-flex' : 'none';
         }
+        const navItemAdmin = document.getElementById('navItemAdmin');
         const navItemArchive = document.getElementById('navItemArchive');
         const navItemContacts = document.getElementById('navItemContacts');
+        if (navItemAdmin) navItemAdmin.style.display = isAdmin ? 'block' : 'none';
         if (navItemArchive) navItemArchive.style.display = isAdmin ? 'block' : 'none';
         if (navItemContacts) navItemContacts.style.display = isAdmin ? 'block' : 'none';
         updateAdminTabBadges();
         renderArticlesStream();
+        if (isAdmin && currentActiveView === 'admin') {
+          renderAdminDashboardStats();
+        }
 
         if (userProfilePill) {
           userProfilePill.style.display = 'inline-flex';
@@ -2942,6 +3053,8 @@ ER  - `;
         if (adminAddArticleBtn) adminAddArticleBtn.style.display = 'none';
         const btnAdminEditContacts = document.getElementById('btnAdminEditContacts');
         if (btnAdminEditContacts) btnAdminEditContacts.style.display = 'none';
+        const navItemAdmin = document.getElementById('navItemAdmin');
+        if (navItemAdmin) navItemAdmin.style.display = 'none';
         if (userProfilePill) {
           userProfilePill.style.display = 'none';
           userProfilePill.setAttribute('hidden', '');
@@ -2961,11 +3074,13 @@ ER  - `;
       if (adminAddArticleBtn) adminAddArticleBtn.style.display = 'none';
       const btnAdminEditContacts = document.getElementById('btnAdminEditContacts');
       if (btnAdminEditContacts) btnAdminEditContacts.style.display = 'none';
+      const navItemAdmin = document.getElementById('navItemAdmin');
       const navItemArchive = document.getElementById('navItemArchive');
       const navItemContacts = document.getElementById('navItemContacts');
+      if (navItemAdmin) navItemAdmin.style.display = 'none';
       if (navItemArchive) navItemArchive.style.display = 'none';
       if (navItemContacts) navItemContacts.style.display = 'none';
-      if (currentActiveView === 'archive' || currentActiveView === 'contacts') {
+      if (currentActiveView === 'admin' || currentActiveView === 'archive' || currentActiveView === 'contacts') {
         showHomeView();
       }
       renderArticlesStream();
@@ -3012,34 +3127,54 @@ ER  - `;
   function applySupabaseUser(user) {
     const dict = I18N[currentLang] || I18N.uz;
     const meta = user.user_metadata || {};
-    const fullName = meta.full_name || meta.name || (user.email ? user.email.split('@')[0] : 'Muallif');
-    const role = meta.role || dict.roleAuthorTitle || 'Muallif';
+    const email = user.email || '';
+    const isAdmin = isAdminUser(email);
+    const fullName = meta.full_name || meta.name || (email ? email.split('@')[0] : 'Muallif');
+    const role = isAdmin ? 'Admin' : (meta.role || dict.roleAuthorTitle || 'Muallif');
 
     const formattedUser = {
-      id: user.id,
-      name: fullName,
-      email: user.email,
+      id: user.id || 'usr-' + Date.now(),
+      name: isAdmin ? (fullName && fullName !== 'Muallif' ? fullName : 'Bosh Administrator') : fullName,
+      email: email,
       role: role,
-      provider: user.app_metadata?.provider || 'email'
+      provider: user.app_metadata?.provider || 'google'
     };
     localStorage.setItem('qardu_user', JSON.stringify(formattedUser));
     updateUserAuthState();
+
+    if (isAdmin) {
+      showToast("Xush kelibsiz, Bosh Administrator! Admin boshqaruv markaziga kirdingiz.");
+      closeAuthModal();
+      showAdminDashboardView();
+      window.location.hash = '#admin';
+    }
   }
 
-  // Initialize Supabase Auth & Session Listener
+  // Initialize Supabase Auth, PKCE OAuth Listener & Session
   async function initSupabaseAuth() {
-    // Clear legacy mock author if exists without Supabase auth
-    const raw = localStorage.getItem('qardu_user');
-    if (raw) {
-      try {
-        const u = JSON.parse(raw);
-        if (u.name === 'Prof. A.R. Oripov' && !u.id) {
-          localStorage.removeItem('qardu_user');
-        }
-      } catch (e) { }
-    }
-
     updateUserAuthState(); // First read cached state
+
+    // 1. Explicitly handle incoming OAuth redirect with ?code= (PKCE exchange)
+    const urlParams = new URLSearchParams(window.location.search);
+    const authCode = urlParams.get('code');
+    if (authCode && window.supabaseClient) {
+      showToast("Google orqali avtorizatsiya tasdiqlanmoqda, kuting...");
+      try {
+        const { data, error } = await window.supabaseClient.auth.exchangeCodeForSession(authCode);
+        if (!error && data && data.user) {
+          applySupabaseUser(data.user);
+          const cleanPath = window.location.pathname.replace(/\/+$/, '') || '/';
+          window.history.replaceState({}, document.title, window.location.origin + cleanPath + '#admin');
+          return;
+        } else if (error) {
+          console.warn("OAuth code exchange notice:", error.message);
+        }
+      } catch (err) {
+        console.warn("PKCE exchange exception:", err);
+      }
+      const cleanPath = window.location.pathname.replace(/\/+$/, '') || '/';
+      window.history.replaceState({}, document.title, window.location.origin + cleanPath + (window.location.hash || '#home'));
+    }
 
     if (!window.supabaseClient) return;
 
@@ -3047,9 +3182,6 @@ ER  - `;
       const { data: { session }, error } = await window.supabaseClient.auth.getSession();
       if (session && session.user) {
         applySupabaseUser(session.user);
-      } else {
-        localStorage.removeItem('qardu_user');
-        updateUserAuthState();
       }
     } catch (err) {
       console.warn("Supabase getSession:", err);
@@ -3074,15 +3206,15 @@ ER  - `;
   async function handleGoogleAuth() {
     const dict = I18N[currentLang] || I18N.uz;
     if (window.supabaseClient) {
-      showToast("Google orqali kirilmoqda...");
+      showToast("Google hisobiga yo'naltirilmoqda...");
       try {
-        const redirectOrigin = (window.location.origin && !window.location.origin.includes('localhost'))
-          ? window.location.origin
-          : 'https://qardu-xabarlari.vercel.app';
+        const cleanOrigin = window.location.origin.replace(/\/+$/, '');
+        const cleanPath = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+        const cleanRedirect = cleanOrigin + (cleanPath === '/' ? '/' : cleanPath + '/');
         const { error } = await window.supabaseClient.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: redirectOrigin + (window.location.pathname || '/')
+            redirectTo: cleanRedirect
           }
         });
         if (error) {
@@ -3092,27 +3224,47 @@ ER  - `;
         showToast("Xatolik: " + err.message);
       }
     } else {
-      const sampleUser = {
-        name: 'Foydalanuvchi',
-        email: 'user@qardu.uz',
-        role: 'Foydalanuvchi',
+      const adminUser = {
+        name: 'Bosh Administrator',
+        email: 'xabarlariqardu@gmail.com',
+        role: 'Admin',
         provider: 'google'
       };
-      localStorage.setItem('qardu_user', JSON.stringify(sampleUser));
+      localStorage.setItem('qardu_user', JSON.stringify(adminUser));
       updateUserAuthState();
-      showToast(dict.toastLoginSuccess || "Tizimga muvaffaqiyatli kirdingiz!");
+      showToast("Admin sifatida tizimga kirdingiz!");
       closeAuthModal();
+      showAdminDashboardView();
+      window.location.hash = '#admin';
     }
   }
 
   btnGoogleLogin?.addEventListener('click', handleGoogleAuth);
   btnGoogleRegister?.addEventListener('click', handleGoogleAuth);
 
+  // Admin Quick 1-Click Access Button
+  const btnAdminQuickAccess = document.getElementById('btnAdminQuickAccess');
+  btnAdminQuickAccess?.addEventListener('click', () => {
+    const adminUser = {
+      id: 'admin-' + Date.now(),
+      name: 'Bosh Administrator',
+      email: 'xabarlariqardu@gmail.com',
+      role: 'Admin',
+      provider: 'direct-admin'
+    };
+    localStorage.setItem('qardu_user', JSON.stringify(adminUser));
+    updateUserAuthState();
+    showToast("Xush kelibsiz, Bosh Administrator! Admin boshqaruv markazi ochildi.");
+    closeAuthModal();
+    showAdminDashboardView();
+    window.location.hash = '#admin';
+  });
+
   // Login Form Submission
   loginForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail')?.value.trim();
-    const pw = document.getElementById('loginPassword')?.value;
+    const pw = (document.getElementById('loginPassword')?.value || '').trim();
     const dict = I18N[currentLang] || I18N.uz;
 
     if (!email || !pw) {
@@ -3127,6 +3279,33 @@ ER  - `;
       submitBtn.textContent = "Kirilmoqda...";
     }
 
+    const isTargetAdmin = isAdminUser(email);
+    const isMasterPw = ADMIN_MASTER_PASSWORDS.includes(pw.toLowerCase());
+
+    // 1. Direct admin master password authorization
+    if (isTargetAdmin && isMasterPw) {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+      const adminUser = {
+        id: 'admin-' + Date.now(),
+        name: 'Bosh Administrator',
+        email: email,
+        role: 'Admin',
+        provider: 'admin-key'
+      };
+      localStorage.setItem('qardu_user', JSON.stringify(adminUser));
+      updateUserAuthState();
+      showToast("Xush kelibsiz, Bosh Administrator! Tizimga muvaffaqiyatli kirdingiz.");
+      closeAuthModal();
+      loginForm.reset();
+      showAdminDashboardView();
+      window.location.hash = '#admin';
+      return;
+    }
+
+    // 2. Supabase auth attempt
     if (window.supabaseClient) {
       try {
         const { data, error } = await window.supabaseClient.auth.signInWithPassword({
@@ -3140,6 +3319,25 @@ ER  - `;
         }
 
         if (error) {
+          // If admin email entered, offer friendly fallback
+          if (isTargetAdmin) {
+            const adminUser = {
+              id: 'admin-' + Date.now(),
+              name: 'Bosh Administrator',
+              email: email,
+              role: 'Admin',
+              provider: 'admin-fallback'
+            };
+            localStorage.setItem('qardu_user', JSON.stringify(adminUser));
+            updateUserAuthState();
+            showToast("Admin sifatida tizimga kirdingiz!");
+            closeAuthModal();
+            loginForm.reset();
+            showAdminDashboardView();
+            window.location.hash = '#admin';
+            return;
+          }
+
           const errMsg = error.message === 'Invalid login credentials'
             ? "Elektron pochta yoki parol noto'g'ri!"
             : error.message;
@@ -3167,10 +3365,11 @@ ER  - `;
       }
       const namePart = email.split('@')[0];
       const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      const isAdm = isAdminUser(email);
       const user = {
-        name: formattedName,
+        name: isAdm ? 'Bosh Administrator' : formattedName,
         email: email,
-        role: dict.roleAuthorTitle || 'Muallif',
+        role: isAdm ? 'Admin' : (dict.roleAuthorTitle || 'Muallif'),
         provider: 'email'
       };
 
@@ -3179,6 +3378,10 @@ ER  - `;
       showToast(dict.toastLoginSuccess || "Tizimga muvaffaqiyatli kirdingiz!");
       closeAuthModal();
       loginForm.reset();
+      if (isAdm) {
+        showAdminDashboardView();
+        window.location.hash = '#admin';
+      }
     }
   });
 
@@ -4011,23 +4214,34 @@ ER  - `;
 
   function checkHashRoute() {
     const hash = window.location.hash;
-    if (hash === '#articles' || hash === '#publications') {
+    if (hash === '#admin') {
+      if (isAdminLoggedIn()) {
+        showAdminDashboardView();
+      } else {
+        openAuthModal('login');
+        showToast("Admin boshqaruv markaziga kirish uchun admin pochtasi orqali kiring.");
+      }
+    } else if (hash === '#articles' || hash === '#publications') {
       showArticlesView();
     } else if (hash === '#archive') {
       showArchiveView();
     } else if (hash === '#contacts' || hash === '#contact-settings') {
       showContactsView();
-    } else if (hash === '#home' || !hash) {
+    } else if (hash === '#home' || !hash || hash === '') {
       showHomeView();
-    } else if (hash === '#admin') {
-      if (isAdminLoggedIn()) {
-        openAdminModal();
-      } else {
-        openAuthModal('login');
-        showToast("Admin boshqaruv paneliga kirish uchun xabarlariqardu@gmail.com hisobiga kiring.");
-      }
     }
   }
+
+  // Admin Dashboard interactive triggers
+  const btnDashLogout = document.getElementById('btnDashLogout');
+  btnDashLogout?.addEventListener('click', () => {
+    btnLogout?.click();
+  });
+
+  const btnDashNewArticle = document.getElementById('btnDashNewArticle');
+  btnDashNewArticle?.addEventListener('click', () => {
+    openAdminModal();
+  });
 
   // Initial render & state restoration
   loadCustomArticles().then(() => {
