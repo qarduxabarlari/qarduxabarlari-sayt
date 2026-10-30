@@ -534,299 +534,7 @@ const I18N = {
 };
 
 // --- 2. ARTICLES DATA STORE & PERSISTENT PDF ENGINE ---
-const BASELINE_ARTICLES = {
-  'art-qardu-1': {
-    id: 'art-qardu-1',
-    categoryKey: 'nat',
-    category: {
-      uz: "Tabiiy fanlar va ekologiya",
-      ru: "Естественные науки и экология",
-      en: "Natural Sciences & Ecology"
-    },
-    title: {
-      uz: "Qashqadaryo vohasi tuproq-iqlim sharoitida qurg'oqchilikka chidamli ekinlarni yetishtirishning ekologik va agrotexnik asoslari",
-      ru: "Экологические и агротехнические основы возделывания засухоустойчивых культур в почвенно-климатических условиях Кашкадарьинского оазиса",
-      en: "Ecological and Agrotechnical Foundations of Cultivating Drought-Resistant Crops in the Soil and Climatic Conditions of the Kashkadarya Oasis"
-    },
-    pubDate: {
-      uz: "2025-yil, 15-aprel",
-      ru: "15 апреля 2025 г.",
-      en: "April 15, 2025"
-    },
-    issue: {
-      uz: "2025-yil, 2-son",
-      ru: "2025 г., 2-й выпуск",
-      en: "2025, Issue 2"
-    },
-    slideImage: "images/slide-ecology.jpg",
-    credit: "© QarDU Biologiya va tuproqshunoslik laboratoriyasi",
-    passport: {
-      pubType: { uz: "Jurnal maqolasi", ru: "Статья в журнале", en: "Journal Article" },
-      pubYear: "2025",
-      authorsText: "X.O. Xolliyev, S.M. Mamatov",
-      journalName: { uz: "QarDU Xabarlari", ru: "Вестник КарГУ", en: "Bulletin of KarSU" },
-      volumeIssue: "74, 2",
-      pagination: "45-56",
-      articleType: { uz: "Ilmiy maqola", ru: "Научная статья", en: "Research Article" },
-      doi: "https://doi.org/10.59272/qardu.2025.2.14",
-      udc: "631.524.85:581.5(575.14)",
-      fileSize: "1.8 MB",
-      fileUrl: null,
-      fileName: "Xolliyev_Qashqadaryo_Ekologiya_2025.pdf"
-    },
-    keywords: {
-      uz: ["qurg'oqchilikka chidamlilik", "Qashqadaryo vohasi", "sho'rlangan tuproqlar", "namlikni tejash", "agrotexnologiya", "ekologik barqarorlik"],
-      ru: ["засухоустойчивость", "Кашкадарьинский оазис", "засоленные почвы", "влагосбережение", "агротехнологии", "экологическая устойчивость"],
-      en: ["drought tolerance", "Kashkadarya oasis", "saline soils", "moisture conservation", "agrotechnology", "ecological resilience"]
-    },
-    abstract: {
-      uz: "Ushbu tadqiqotda Janubiy O'zbekistonning qurg'oqchil va sho'rlanishga moyil hududlari, xususan Qashqadaryo vohasi tuproq-iqlim sharoitida qishloq xo'jaligi ekinlarini yetishtirishning innovatsion agrotexnik usullari ilmiy asoslangan. Tadqiqot jarayonida o'simliklarning fiziologik xususiyatlari, ildiz tizimining rivojlanishi hamda tomchilatib sug'orish tizimlari orqali suv sarfini 35-40% ga kamaytirish imkoniyatlari aniqlangan. Natijalar mintaqada oziq-ovqat xavfsizligini ta'minlash va suv resurslaridan oqilona foydalanishda muhim amaliy ahamiyatga ega.",
-      ru: "В исследовании научно обоснованы инновационные агротехнические методы возделывания сельскохозяйственных культур в аридных и засоленных условиях юга Узбекистана, в частности Кашкадарьинского оазиса. Выявлены физиологические адаптационные механизмы растений и доказана эффективность водосберегающих технологий капельного орошения со снижением водопотребления на 35-40%.",
-      en: "This research provides a comprehensive scientific analysis of innovative agrotechnical cultivation methods for drought-resistant crops in the arid and salinity-prone conditions of the Kashkadarya oasis in Southern Uzbekistan. The study evaluates physiological adaptation mechanisms, root system development, and proves that precision drip-irrigation saves up to 35-40% of irrigation water while increasing crop yield."
-    },
-    metrics: { views: 428, downloads: 154, citations: 12 },
-    authors: [
-      {
-        name: { uz: "Xolliyev Xurshid Ochilovich", ru: "Холлиев Хуршид Очилович", en: "Khurshid O. Kholliyev" },
-        degree: { uz: "biologiya fanlari doktori, professor", ru: "доктор биологических наук, профессор", en: "D.Sc. in Biology, Professor" },
-        affiliation: { uz: "Qarshi Davlat Universiteti, Botanika va ekologiya kafedrasi", ru: "Каршинский государственный университет", en: "Karshi State University, Department of Botany & Ecology" },
-        orcid: "0000-0002-3914-7718",
-        email: "x.kholliyev@qardu.uz"
-      },
-      {
-        name: { uz: "Mamatov Sarvar Murodovich", ru: "Маматов Сарвар Муродович", en: "Sarvar M. Mamatov" },
-        degree: { uz: "qishloq xo'jaligi fanlari nomzodi, dotsent", ru: "кандидат сельскохозяйственных наук, доцент", en: "Ph.D. in Agricultural Sciences" },
-        affiliation: { uz: "Qarshi Davlat Universiteti", ru: "Каршинский государственный университет", en: "Karshi State University" },
-        orcid: "0000-0003-1284-5502",
-        email: "s.mamatov@qardu.uz"
-      }
-    ],
-    references: [
-      "Xolliyev X.O. O'zbekistonning qurg'oqchil hududlari ekologiyasi. Toshkent: Fan, 2021. - 240 b.",
-      "FAO. The State of the World's Land and Water Resources for Food and Agriculture (SOLAW). Rome, 2021.",
-      "Mamatov S.M., Berdiyev T. Qashqadaryo vohasi sug'oriladigan tuproqlarining agrokimyoviy holati // QarDU Xabarlari. - 2024. - № 1. - B. 32-39."
-    ]
-  },
-
-  'art-qardu-2': {
-    id: 'art-qardu-2',
-    categoryKey: 'tech',
-    category: {
-      uz: "Axborot texnologiyalari va AI",
-      ru: "Информационные технологии и ИИ",
-      en: "Information Technology & AI"
-    },
-    title: {
-      uz: "Sun'iy intellekt va neyron tarmoqlar asosida qishloq xo'jaligi hosildorligini bashorat qilishning intellektual modellari",
-      ru: "Интеллектуальные модели прогнозирования урожайности сельскохозяйственных культур на основе искусственного интеллекта и нейронных сетей",
-      en: "Intelligent Models for Predicting Crop Yields Based on Artificial Intelligence and Deep Neural Networks"
-    },
-    pubDate: {
-      uz: "2025-yil, 20-aprel",
-      ru: "20 апреля 2025 г.",
-      en: "April 20, 2025"
-    },
-    issue: {
-      uz: "2025-yil, 2-son",
-      ru: "2025 г., 2-й выпуск",
-      en: "2025, Issue 2"
-    },
-    slideImage: "images/slide-ai.jpg",
-    credit: "© QarDU Sun'iy intellekt va raqamli texnologiyalar markazi",
-    passport: {
-      pubType: { uz: "Jurnal maqolasi", ru: "Статья в журнале", en: "Journal Article" },
-      pubYear: "2025",
-      authorsText: "U.B. Oripov, A.T. Rustamov",
-      journalName: { uz: "QarDU Xabarlari", ru: "Вестник КарГУ", en: "Bulletin of KarSU" },
-      volumeIssue: "74, 2",
-      pagination: "57-69",
-      articleType: { uz: "Ilmiy maqola", ru: "Научная статья", en: "Research Article" },
-      doi: "https://doi.org/10.59272/qardu.2025.2.15",
-      udc: "004.89:004.032.26:631.1",
-      fileSize: "2.1 MB",
-      fileUrl: null,
-      fileName: "Oripov_Suniy_Intellekt_QarDU_2025.pdf"
-    },
-    keywords: {
-      uz: ["sun'iy intellekt", "mashinali o'rganish", "chuqur neyron tarmoqlar", "LSTM arxitekturasi", "hosildorlik bashorati", "sensor monitoringi"],
-      ru: ["искусственный интеллект", "машинное обучение", "глубокие нейросети", "архитектура LSTM", "прогнозирование урожая", "сенсорный мониторинг"],
-      en: ["artificial intelligence", "machine learning", "deep neural networks", "LSTM architecture", "crop yield prediction", "IoT sensor monitoring"]
-    },
-    abstract: {
-      uz: "Mazkur maqolada qishloq xo'jaligida hosildorlikni yuqori aniqlik bilan bashorat qilish uchun ko'p qatlamli neyron tarmoqlar (Deep Neural Networks) va takrorlanuvchi neyron tarmoqlar (LSTM) gibrid modeli ishlab chiqilgan. Model meteorologik ma'lumotlar, tuproq namligi datchiklari va sun'iy yo'ldosh multispektral (NDVI) tasvirlari ma'lumotlariga tayanadi. Tajribalar natijasida ishlab chiqilgan gibrid algoritm bashorat qilish aniqligini (R² = 0.94, RMSE = 1.82) ta'minlab, an'anaviy statistik usullardan 18% yuqori samaradorlik ko'rsatdi.",
-      ru: "В статье разработана гибридная модель глубоких нейронных сетей (LSTM + CNN) для высокоточного прогнозирования урожайности сельхозкультур. Модель интегрирует агрометеорологические параметры, данные датчиков влажности почвы и спектральные спутниковые индексы (NDVI). Точность предсказания достигла R² = 0.94 при погрешности RMSE = 1.82.",
-      en: "This paper presents a hybrid deep learning architecture combining Convolutional Neural Networks and Long Short-Term Memory (CNN-LSTM) networks to predict agricultural crop yields with superior accuracy. The model ingests multi-source time-series data including IoT soil sensors, microclimate telemetry, and multispectral Sentinel-2 NDVI satellite imagery, achieving an R² of 0.94."
-    },
-    metrics: { views: 612, downloads: 289, citations: 19 },
-    authors: [
-      {
-        name: { uz: "Oripov Umidjon Baxtiyorovich", ru: "Орипов Умиджон Бахтиёрович", en: "Umidjon B. Oripov" },
-        degree: { uz: "texnika fanlari bo'yicha falsafa doktori (PhD), dotsent", ru: "PhD по техническим наукам, доцент", en: "Ph.D. in Computer Science" },
-        affiliation: { uz: "Qarshi Davlat Universiteti, Axborot texnologiyalari fakulteti", ru: "Каршинский государственный университет", en: "Karshi State University, Faculty of Information Technology" },
-        orcid: "0000-0001-8823-4109",
-        email: "u.oripov@qardu.uz"
-      },
-      {
-        name: { uz: "Rustamov Asror Temirovich", ru: "Рустамов Асрор Темирович", en: "Asror T. Rustamov" },
-        degree: { uz: "katta o'qituvchi, tadqiqotchi", ru: "старший преподаватель", en: "Senior Researcher" },
-        affiliation: { uz: "Qarshi Davlat Universiteti", ru: "Каршинский государственный университет", en: "Karshi State University" },
-        orcid: "0000-0002-7710-9014",
-        email: "a.rustamov@qardu.uz"
-      }
-    ],
-    references: [
-      "Goodfellow I., Bengio Y., Courville A. Deep Learning. MIT Press, 2016.",
-      "Oripov U.B. Raqamli qishloq xo'jaligida ma'lumotlarni intellektual tahlil qilish algoritmlari // Axborot texnologiyalari va modellashtirish. - 2024. - № 3. - B. 112-120.",
-      "LeCun Y., Bengio Y., Hinton G. Deep learning // Nature. - 2015. - Vol. 521. - P. 436-444."
-    ]
-  },
-
-  'art-qardu-3': {
-    id: 'art-qardu-3',
-    categoryKey: 'econ',
-    category: {
-      uz: "Iqtisodiyot va innovatsiyalar",
-      ru: "Экономика и инновации",
-      en: "Economics & Innovation"
-    },
-    title: {
-      uz: "Raqamli iqtisodiyot sharoitida mintaqaviy sanoat korxonalari investitsion jozibadorligini oshirish mexanizmlari",
-      ru: "Механизмы повышения инвестиционной привлекательности региональных промышленных предприятий в условиях цифровой экономики",
-      en: "Mechanisms for Increasing the Investment Attractiveness of Regional Industrial Enterprises in the Digital Economy"
-    },
-    pubDate: {
-      uz: "2025-yil, 25-aprel",
-      ru: "25 апреля 2025 г.",
-      en: "April 25, 2025"
-    },
-    issue: {
-      uz: "2025-yil, 2-son",
-      ru: "2025 г., 2-й выпуск",
-      en: "2025, Issue 2"
-    },
-    slideTheme: "linear-gradient(135deg, #0a2540 0%, #1e3a8a 50%, #0f172a 100%)",
-    credit: "© QarDU Iqtisodiyot va biznes fakulteti",
-    passport: {
-      pubType: { uz: "Jurnal maqolasi", ru: "Статья в журнале", en: "Journal Article" },
-      pubYear: "2025",
-      authorsText: "N.Sh. Berdiyeva, I.K. Eshmurodov",
-      journalName: { uz: "QarDU Xabarlari", ru: "Вестник КарГУ", en: "Bulletin of KarSU" },
-      volumeIssue: "74, 2",
-      pagination: "70-82",
-      articleType: { uz: "Ilmiy maqola", ru: "Научная статья", en: "Research Article" },
-      doi: "https://doi.org/10.59272/qardu.2025.2.16",
-      udc: "330.341.1:338.45",
-      fileSize: "1.9 MB",
-      fileUrl: null,
-      fileName: "Berdiyeva_Investitsiya_Raqamli_Iqtisodiyot_2025.pdf"
-    },
-    keywords: {
-      uz: ["raqamli iqtisodiyot", "investitsion jozibadorlik", "mintaqaviy sanoat", "klaster tizimi", "innovatsion faollik", "moliyaviy tahlil"],
-      ru: ["цифровая экономика", "инвестиционная привлекательность", "региональная промышленность", "кластерная система", "инновации"],
-      en: ["digital economy", "investment attractiveness", "regional industry", "industrial clusters", "financial modeling", "innovation"]
-    },
-    abstract: {
-      uz: "Maqolada raqamli transformatsiya jarayonlarining O'zbekiston hududlari, xususan Qashqadaryo viloyati sanoat korxonalarining investitsion jozibadorligiga ta'siri ekonometrik modellar yordamida tahlil qilingan. Korxonalarning raqamli infratuzilmasi, moliyaviy barqarorligi va klasterlashuv darajasini hisobga oluvchi ko'p omilli baholash metodikasi taklif etilgan. Tadqiqot xulosalari sanoat tarmoqlariga xorijiy va mahalliy to'g'ridan-to'g'ri investitsiyalarni jalb qilish strategiyasini takomillashtirishga xizmat qiladi.",
-      ru: "В статье исследовано влияние цифровой трансформации на инвестиционную привлекательность региональных промышленных предприятий. Предложена многофакторная модель оценки готовности предприятий к внедрению инноваций и привлечению прямых инвестиций.",
-      en: "This article investigates the econometric impact of digital transformation on the investment attractiveness of regional industrial manufacturing enterprises in Uzbekistan. A multi-criteria quantitative evaluation matrix is developed to help industrial leaders and policymakers optimize foreign direct investment attraction."
-    },
-    metrics: { views: 375, downloads: 142, citations: 8 },
-    authors: [
-      {
-        name: { uz: "Berdiyeva Nodira Shodiyevna", ru: "Бердиева Нодира Шодиевна", en: "Nodira Sh. Berdiyeva" },
-        degree: { uz: "iqtisodiyot fanlari doktori, professor", ru: "доктор экономических наук, профессор", en: "D.Sc. in Economics, Professor" },
-        affiliation: { uz: "Qarshi Davlat Universiteti, Iqtisodiyot kafedrasi", ru: "Каршинский государственный университет", en: "Karshi State University, Department of Economics" },
-        orcid: "0000-0002-5401-8933",
-        email: "n.berdiyeva@qardu.uz"
-      },
-      {
-        name: { uz: "Eshmurodov Ilhom Kamolovich", ru: "Эшмуродов Илхом Камолович", en: "Ilhom K. Eshmurodov" },
-        degree: { uz: "iqtisodiyot fanlari nomzodi", ru: "кандидат экономических наук", en: "Ph.D. in Economics" },
-        affiliation: { uz: "Qarshi Davlat Universiteti", ru: "Каршинский государственный университет", en: "Karshi State University" },
-        orcid: "0000-0003-4412-1980",
-        email: "i.eshmurodov@qardu.uz"
-      }
-    ],
-    references: [
-      "Berdiyeva N.Sh. Mintaqa iqtisodiyotini innovatsion rivojlantirish omillari. - Toshkent: Iqtisodiyot, 2023. - 210 b.",
-      "Schwab K. The Fourth Industrial Revolution. Crown Publishing, 2017.",
-      "World Bank. Uzbekistan Digital Economy Country Assessment. Washington, DC: World Bank, 2022."
-    ]
-  },
-
-  'art-qardu-4': {
-    id: 'art-qardu-4',
-    categoryKey: 'hist',
-    category: {
-      uz: "Tarix va filologiya",
-      ru: "История и филология",
-      en: "History & Humanities"
-    },
-    title: {
-      uz: "Nasaf va Kesh allomalarining islom sivilizatsiyasi va O'rta asrlar fan taraqqiyotiga qo'shgan hissasi (tarixiy-manbashunoslik tahlili)",
-      ru: "Вклад ученых Насафа и Кеша в развитие исламской цивилизации и средневековой науки (историко-источниковедческий анализ)",
-      en: "Contribution of Nasaf and Kesh Scholars to the Development of Islamic Civilization and Medieval Science (Historical and Source Study Analysis)"
-    },
-    pubDate: {
-      uz: "2025-yil, 28-aprel",
-      ru: "28 апреля 2025 г.",
-      en: "April 28, 2025"
-    },
-    issue: {
-      uz: "2025-yil, 2-son",
-      ru: "2025 г., 2-й выпуск",
-      en: "2025, Issue 2"
-    },
-    slideTheme: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #0f172a 100%)",
-    credit: "© QarDU Tarix va manbashunoslik ilmiy laboratoriyasi",
-    passport: {
-      pubType: { uz: "Jurnal maqolasi", ru: "Статья в журнале", en: "Journal Article" },
-      pubYear: "2025",
-      authorsText: "A.K. Ravshanov, F.I. Rahmonov",
-      journalName: { uz: "QarDU Xabarlari", ru: "Вестник КарГУ", en: "Bulletin of KarSU" },
-      volumeIssue: "74, 2",
-      pagination: "83-95",
-      articleType: { uz: "Ilmiy maqola", ru: "Научная статья", en: "Research Article" },
-      doi: "https://doi.org/10.59272/qardu.2025.2.17",
-      udc: "94(575.1):28-9",
-      fileSize: "1.7 MB",
-      fileUrl: null,
-      fileName: "Ravshanov_Nasaf_Kesh_Allomalari_2025.pdf"
-    },
-    keywords: {
-      uz: ["Nasaf", "Kesh", "manbashunoslik", "allomalar merosi", "islom sivilizatsiyasi", "Abu Hafs an-Nasafiy", "Sharq qo'lyozmalari"],
-      ru: ["Насаф", "Кеш", "источниковедение", "научное наследие", "исламская цивилизация", "восточные рукописи"],
-      en: ["Nasaf", "Kesh", "historiography", "scholarly heritage", "Islamic civilization", "Abu Hafs an-Nasafi", "Oriental manuscripts"]
-    },
-    abstract: {
-      uz: "Ushbu ilmiy maqolada qadimgi Nasaf (hozirgi Qarshi) va Kesh (Shahrisabz) shaharlaridan yetishib chiqqan mutafakkir va olimlarning (Abu Hafs Umar an-Nasafiy, Abul Barakot an-Nasafiy, Najmiddin an-Nasafiy va boshqalar) ilmiy-ma'naviy merosi ilk manbalar asosida tahlil qilingan. Olimlarning kalom ilmi, mantiq, fiqh, falakiyot va adabiyot sohalaridagi asarlari jahon sivilizatsiyasi rivojiga qo'shgan hissasi manbashunoslik nuqtai nazaridan yoritilgan.",
-      ru: "В статье на основе арабографичных первоисточников исследуется научно-богословское наследие ученых древнего Насафа и Кеша (Абу Хафса ан-Насафи, Абу-л-Бараката ан-Насафи и др.). Освещается их весомый вклад в развитие фикха, калама, логики и средневековой восточной мысли.",
-      en: "This research presents a critical source-based historiographical analysis of the intellectual contributions of scholars from ancient Nasaf (Karshi) and Kesh (Shahrisabz) to the Islamic Golden Age. Works by luminaries such as Abu Hafs an-Nasafi and Abul Barakat an-Nasafi across theology, logic, jurisprudence, and astronomy are examined."
-    },
-    metrics: { views: 498, downloads: 210, citations: 14 },
-    authors: [
-      {
-        name: { uz: "Ravshanov Alisher Xoliqovich", ru: "Равшанов Алишер Холикович", en: "Alisher Kh. Ravshanov" },
-        degree: { uz: "tarix fanlari doktori, professor", ru: "доктор исторических наук, профессор", en: "D.Sc. in History, Professor" },
-        affiliation: { uz: "Qarshi Davlat Universiteti, O'zbekiston tarixi kafedrasi", ru: "Каршинский государственный университет", en: "Karshi State University, Department of Uzbek History" },
-        orcid: "0000-0001-9042-3321",
-        email: "a.ravshanov@qardu.uz"
-      },
-      {
-        name: { uz: "Rahmonov Faxriddin Ismatovich", ru: "Рахмонов Фахриддин Исматович", en: "Fakhriddin I. Rahmonov" },
-        degree: { uz: "tarix fanlari bo'yicha falsafa doktori (PhD)", ru: "PhD по историческим наукам", en: "Ph.D. in History" },
-        affiliation: { uz: "Qarshi Davlat Universiteti", ru: "Каршинский государственный университет", en: "Karshi State University" },
-        orcid: "0000-0002-6120-8840",
-        email: "f.rahmonov@qardu.uz"
-      }
-    ],
-    references: [
-      "Ravshanov A.X. Qashqadaryo tarixi: qadimgi davrdan XX asr boshlarigacha. - Toshkent: Yangi asr avlodi, 2022. - 380 b.",
-      "Abu Hafs an-Nasafiy. Al-Qand fi zikri ulamoi Samarqand. - Tehron, 1999.",
-      "Bartold V.V. Turkiston madaniy hayoti tarixi. - Toshkent: Fan, 2019."
-    ]
-  }
-};
+const BASELINE_ARTICLES = {};
 
 const ARTICLES = { ...BASELINE_ARTICLES };
 const ARTICLE_FILES = {}; // In-memory runtime cache for Blobs / Files
@@ -1825,10 +1533,11 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
     const emptyBox = document.createElement('div');
     emptyBox.className = 'empty-notice-card';
     emptyBox.style.margin = '20px 0';
+    const isSearching = !!currentStreamSearch || activeStreamCategory !== 'all';
     emptyBox.innerHTML = `
-      <div class="empty-notice-icon">🔍</div>
-      <h3 class="empty-notice-title">${dict.noArticlesFound || "Qidiruv bo'yicha maqolalar topilmadi"}</h3>
-      <p class="empty-notice-desc">${dict.noArticlesInList || "Iltimos, boshqa kalit so'z yoki toifani tanlab ko'ring."}</p>
+      <div class="empty-notice-icon">${isSearching ? '🔍' : '📄'}</div>
+      <h3 class="empty-notice-title">${isSearching ? (dict.noArticlesFound || "Qidiruv bo'yicha maqolalar topilmadi") : (dict.noArticlesNoticeTitle || "Hozircha maqolalar mavjud emas")}</h3>
+      <p class="empty-notice-desc">${isSearching ? (dict.noArticlesInList || "Iltimos, boshqa kalit so'z yoki toifani tanlab ko'ring.") : (dict.noArticlesNoticeDesc || "Admin hisobi (xabarlariqardu@gmail.com) orqali tizimga kirib, 'Maqola joylash' tugmasi yordamida saytga yangi ilmiy maqola joylashingiz mumkin.")}</p>
     `;
     container.appendChild(emptyBox);
     return;
@@ -4005,13 +3714,25 @@ ER  - `;
 
   // Load custom stored articles from localStorage and Supabase
   async function loadCustomArticles() {
-    // 1. From localStorage (strictly purged of localhost test articles)
+    // 0. Purge legacy mock/template articles from carousel storage
+    try {
+      const carouselRaw = localStorage.getItem('qardu_carousel_articles');
+      if (carouselRaw) {
+        const arr = JSON.parse(carouselRaw);
+        if (Array.isArray(arr)) {
+          const cleaned = arr.filter(id => !id.startsWith('art-qardu-') && !['art-1', 'art-2', 'art-3'].includes(id));
+          localStorage.setItem('qardu_carousel_articles', JSON.stringify(cleaned));
+        }
+      }
+    } catch (e) {}
+
+    // 1. From localStorage (strictly purged of localhost test & template articles)
     try {
       const raw = localStorage.getItem('qardu_custom_articles');
       if (raw) {
         const list = JSON.parse(raw);
         if (Array.isArray(list)) {
-          const filtered = list.filter(item => item && item.id && !['art-1', 'art-2', 'art-3'].includes(item.id) && !isTestArticle(item));
+          const filtered = list.filter(item => item && item.id && !['art-1', 'art-2', 'art-3', 'art-qardu-1', 'art-qardu-2', 'art-qardu-3', 'art-qardu-4'].includes(item.id) && !item.id.startsWith('art-qardu-') && !isTestArticle(item));
           localStorage.setItem('qardu_custom_articles', JSON.stringify(filtered));
           filtered.forEach(item => {
             ARTICLES[item.id] = item;

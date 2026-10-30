@@ -141,6 +141,10 @@ Sayt bitta sahifali (SPA) arxitekturada ishlaydi va URL hash (`#home`, `#publica
   3. **Google OAuth va PKCE to'liq to'g'rilandi**: `supabase-client.js` ishga tushishi bilanoq `onAuthStateChange` tinglovchisi ulandi. Shu sababli Google orqali kirganda hech qanday avtorizatsiya hodisasi boy berilmaydi. `detectSessionInUrl: true` bilan ziddiyatga tushgan takroriy qo'lda `exchangeCodeForSession` chaqiruvi olib tashlandi. Foydalanuvchi `xabarlariqardu@gmail.com` pochtasini tanlab tizimga qaytganda sessiya avtomatik ravishda tasdiqlanib, admin panel imkoniyatlari darhol ishga tushadi.
   4. **Ro'yxatdan o'tish va Login kafolati**: `xabarlariqardu@gmail.com` bilan Google orqali kirilganda, ro'yxatdan o'tilganda yoki parol orqali kirilganda bir zumda admin imkoniyatlari faollashadi.
 
+#### ❌ 9-Vazifa: Shablon sifatida yaratilgan maqolalarni tozalash
+- **Nima qilindi**: Boshlang'ich sinov uchun yaratilgan 4 ta sun'iy shablon maqola (`art-qardu-1`, `art-qardu-2`, `art-qardu-3`, `art-qardu-4`) dastur kodidan butunlay o'chirildi.
+- **Natija**: Saytda faqat Administrator tomonidan joylashtiriladigan haqiqiy ilmiy maqolalar chiqadigan bo'ldi. Maqola bo'lmagan paytda barcha bo'limlar (Karusel, Maqolalar oqimi, Pasport) estetik va toza bo'sh holat xabarlarini ko'rsatadi.
+
 ---
 
 ## 5. Kelgusi Ishlar Uchun Qat'iy Qoidalar
