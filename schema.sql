@@ -140,3 +140,30 @@ DROP POLICY IF EXISTS "Sozlamalarni yangilash" ON public.journal_settings;
 CREATE POLICY "Sozlamalarni hamma o'qiy oladi" ON public.journal_settings FOR SELECT USING (true);
 CREATE POLICY "Sozlamalarni saqlash" ON public.journal_settings FOR INSERT WITH CHECK (true);
 CREATE POLICY "Sozlamalarni yangilash" ON public.journal_settings FOR UPDATE USING (true);
+
+
+-- 4. Storage Bucket (Fayllar va muqova rasmlari ombori)
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('article-files', 'article-files', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DROP POLICY IF EXISTS "Fayllarni hamma ko'rishi mumkin" ON storage.objects;
+DROP POLICY IF EXISTS "Fayllarni yuklash" ON storage.objects;
+DROP POLICY IF EXISTS "Fayllarni yangilash" ON storage.objects;
+DROP POLICY IF EXISTS "Fayllarni o'chirish" ON storage.objects;
+
+CREATE POLICY "Fayllarni hamma ko'rishi mumkin" 
+  ON storage.objects FOR SELECT 
+  USING (bucket_id = 'article-files');
+
+CREATE POLICY "Fayllarni yuklash" 
+  ON storage.objects FOR INSERT 
+  WITH CHECK (bucket_id = 'article-files');
+
+CREATE POLICY "Fayllarni yangilash" 
+  ON storage.objects FOR UPDATE 
+  USING (bucket_id = 'article-files');
+
+CREATE POLICY "Fayllarni o'chirish" 
+  ON storage.objects FOR DELETE 
+  USING (bucket_id = 'article-files');

@@ -3501,13 +3501,15 @@ ER  - `;
         references: []
       };
 
-      // 1. Try to save into Supabase database (with dual compatibility)
+      // 1. Try to save into Supabase database (with dual schema compatibility)
       if (window.supabaseClient) {
         try {
           const sbRecord = {
             id: newId,
             title: title,
             title_uz: title,
+            title_ru: title,
+            title_en: title,
             authors: authors,
             pub_type: pubType,
             pub_year: parseInt(pubYear) || new Date().getFullYear(),
@@ -3520,17 +3522,43 @@ ER  - `;
             keywords_uz: Array.isArray(keywords) ? keywords : [keywords],
             abstract: abstract,
             abstract_uz: abstract,
+            abstract_ru: abstract,
+            abstract_en: abstract,
             file_url: fileUrl,
             pdf_url: fileUrl,
             file_name: fileName,
             cover_url: coverImageUrl || null,
             cover_image: coverImageUrl || null,
+            passport_data: newArticle.passport,
+            authors_data: newArticle.authors,
             is_archived: false,
             created_at: new Date().toISOString()
           };
           const { error } = await window.supabaseClient.from('articles').insert([sbRecord]);
           if (error) {
-            console.warn('Supabase insert notice (RLS or column):', error.message);
+            console.warn('Supabase insert notice (full schema):', error.message);
+            // Fallback for base Supabase schema without optional columns
+            const legacyRecord = {
+              id: newId,
+              doi: doi || `https://doi.org/10.59272/qardu.${pubYear}.admin.${Date.now().toString().slice(-4)}`,
+              title_uz: title,
+              title_ru: title,
+              title_en: title,
+              abstract_uz: abstract,
+              abstract_ru: abstract,
+              abstract_en: abstract,
+              keywords_uz: Array.isArray(keywords) ? keywords : [keywords],
+              authors_data: newArticle.authors,
+              passport_data: newArticle.passport,
+              metrics: { views: 1, downloads: 0, citations: 0 },
+              created_at: new Date().toISOString()
+            };
+            const { error: fallbackError } = await window.supabaseClient.from('articles').insert([legacyRecord]);
+            if (!fallbackError) {
+              console.log('Article saved to Supabase via legacy columns schema!');
+            } else {
+              console.warn('Supabase fallback insert note:', fallbackError.message);
+            }
           } else {
             console.log('Article successfully saved to Supabase database!');
           }
