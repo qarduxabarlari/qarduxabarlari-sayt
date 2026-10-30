@@ -138,7 +138,7 @@ Sayt bitta sahifali (SPA) arxitekturada ishlaydi va URL hash (`#home`, `#publica
 - **Tuzatish**:
   1. **Qat'iy admin cheklovi**: Faqat va faqat `xabarlariqardu@gmail.com` pochtasiga admin huquqi berildi (`const ADMIN_EMAIL = 'xabarlariqardu@gmail.com'`). Barcha boshqa pochtalar olib tashlandi.
   2. **Asl Admin panel qayta tiklandi**: Alohida dashboard sahifasi va keraksiz tugmalar to'liq tozalndi. Admin panel deganda asosiy sahifadagi barcha admin qo'shimchalari («Maqola joylash» tugmasi, navbardagi «Arxiv» va «Aloqa sozlamalari» bo'limlari, har bir maqoladagi «Bosh panelga qadash / Arxivlash / O'chirish» tugmalari hamda pastdagi «Aloqani tahrirlash» tugmasi) tushuniladi va ular `xabarlariqardu@gmail.com` kirishi bilan darhol faollashadi.
-  3. **Google OAuth va PKCE to'liq to'g'rilandi**: OAuth qaytganda sessiya tozalab yuborilmaydi, `exchangeCodeForSession` va `onAuthStateChange` orqali admin foydalanuvchi aniqlanib, barcha admin elementlari bir zumda jonlanadi.
+  3. **Google OAuth va PKCE to'liq to'g'rilandi**: `supabase-client.js` ishga tushishi bilanoq `onAuthStateChange` tinglovchisi ulandi. Shu sababli Google orqali kirganda hech qanday avtorizatsiya hodisasi boy berilmaydi. `detectSessionInUrl: true` bilan ziddiyatga tushgan takroriy qo'lda `exchangeCodeForSession` chaqiruvi olib tashlandi. Foydalanuvchi `xabarlariqardu@gmail.com` pochtasini tanlab tizimga qaytganda sessiya avtomatik ravishda tasdiqlanib, admin panel imkoniyatlari darhol ishga tushadi.
   4. **Ro'yxatdan o'tish va Login kafolati**: `xabarlariqardu@gmail.com` bilan Google orqali kirilganda, ro'yxatdan o'tilganda yoki parol orqali kirilganda bir zumda admin imkoniyatlari faollashadi.
 
 ---

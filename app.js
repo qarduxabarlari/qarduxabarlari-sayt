@@ -3019,9 +3019,15 @@ ER  - `;
 
   // Helper: Apply user session to UI
   function applySupabaseUser(user) {
+    if (!user) return;
     const dict = I18N[currentLang] || I18N.uz;
     const meta = user.user_metadata || {};
-    const email = (user.email || '').toLowerCase().trim();
+    const email = (
+      user.email ||
+      meta.email ||
+      (user.identities && user.identities[0]?.identity_data?.email) ||
+      ''
+    ).toLowerCase().trim();
     const isAdmin = isAdminUser(email);
     const fullName = meta.full_name || meta.name || (email ? email.split('@')[0] : 'Muallif');
     const role = isAdmin ? 'Admin' : (meta.role || dict.roleAuthorTitle || 'Muallif');
@@ -3043,44 +3049,43 @@ ER  - `;
     }
   }
 
-  // Initialize Supabase Auth, PKCE OAuth Listener & Session
+  // Connect immediate bridge with supabase-client.js
+  window.__applySupabaseSessionToUI = function(user) {
+    applySupabaseUser(user);
+  };
+
+  window.__updateUserAuthStateToUI = function() {
+    updateUserAuthState();
+  };
+
+  // Initialize Supabase Auth & Session Detection
   async function initSupabaseAuth() {
     updateUserAuthState(); // First read cached state
 
-    // 1. Explicitly handle incoming OAuth redirect with ?code= (PKCE exchange)
+    // 1. If supabase-client.js caught the session during page startup
+    if (window.__supabaseAuthSession && window.__supabaseAuthSession.user) {
+      applySupabaseUser(window.__supabaseAuthSession.user);
+    }
+
+    // 2. If returning from OAuth redirect with code, show notification while Supabase exchanges it
     const urlParams = new URLSearchParams(window.location.search);
-    const authCode = urlParams.get('code');
-    if (authCode && window.supabaseClient) {
-      showToast("Google orqali avtorizatsiya tasdiqlanmoqda, kuting...");
-      try {
-        const { data, error } = await window.supabaseClient.auth.exchangeCodeForSession(authCode);
-        if (!error && data && data.user) {
-          applySupabaseUser(data.user);
-          const cleanPath = window.location.pathname || '/';
-          window.history.replaceState({}, document.title, window.location.origin + cleanPath + (window.location.hash || '#home'));
-          return;
-        } else if (error) {
-          console.warn("OAuth code exchange notice:", error.message);
-        }
-      } catch (err) {
-        console.warn("PKCE exchange exception:", err);
-      }
-      const cleanPath = window.location.pathname || '/';
-      window.history.replaceState({}, document.title, window.location.origin + cleanPath + (window.location.hash || '#home'));
+    if (urlParams.has('code')) {
+      showToast("Google orqali kirdingiz, admin sozlamalari yuklanmoqda...");
     }
 
     if (!window.supabaseClient) return;
 
+    // 3. Query active session from Supabase
     try {
       const { data: { session }, error } = await window.supabaseClient.auth.getSession();
       if (session && session.user) {
         applySupabaseUser(session.user);
       }
     } catch (err) {
-      console.warn("Supabase getSession:", err);
+      console.warn("Supabase getSession notice:", err);
     }
 
-    // Subscribe to auth changes (login, logout, token refresh)
+    // 4. Ensure ongoing auth change events are handled
     window.supabaseClient.auth.onAuthStateChange((event, session) => {
       console.log("Supabase Auth Event:", event);
       if (session && session.user) {
@@ -3101,13 +3106,11 @@ ER  - `;
     if (window.supabaseClient) {
       showToast("Google hisobiga yo'naltirilmoqda...");
       try {
-        const cleanOrigin = window.location.origin.replace(/\/+$/, '');
-        const cleanPath = window.location.pathname || '/';
-        const cleanRedirect = cleanOrigin + (cleanPath.startsWith('/') ? cleanPath : '/' + cleanPath);
+        const redirectUrl = window.location.origin + '/';
         const { error } = await window.supabaseClient.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: cleanRedirect
+            redirectTo: redirectUrl
           }
         });
         if (error) {
