@@ -914,6 +914,11 @@ function renderArticle() {
     if (artTitle) artTitle.textContent = dict.noArticlesTitle || "Hozircha saytda maqolalar mavjud emas";
 
     // Hide article sections
+    const detailCoverEl = document.getElementById('articleDetailCover');
+    if (detailCoverEl) {
+      detailCoverEl.style.display = 'none';
+      detailCoverEl.innerHTML = '';
+    }
     if (passportEl) passportEl.style.display = 'none';
     if (keywordsEl) keywordsEl.style.display = 'none';
     if (attachmentEl) attachmentEl.style.display = 'none';
@@ -956,6 +961,25 @@ function renderArticle() {
   if (bcIssue) bcIssue.textContent = (article.issue && (article.issue[currentLang] || article.issue.uz)) || '—';
   const bcArticleTitle = document.getElementById('bcArticleTitle');
   if (bcArticleTitle) bcArticleTitle.textContent = (article.title && (article.title[currentLang] || article.title.uz)) || '—';
+
+  // Detail View Ambient Cover Banner
+  const detailCoverEl = document.getElementById('articleDetailCover');
+  const coverImg = article.coverImage || article.slideImage || null;
+  if (detailCoverEl) {
+    if (coverImg) {
+      detailCoverEl.style.display = 'flex';
+      const safeCoverUrl = coverImg.replace(/"/g, '%22');
+      const safeTitle = (article.title && (article.title[currentLang] || article.title.uz)) || '';
+      detailCoverEl.innerHTML = `
+        <div class="article-stream-cover-ambient" style="background-image: url(&quot;${safeCoverUrl}&quot;);"></div>
+        <div class="article-stream-cover-overlay"></div>
+        <img src="${coverImg}" alt="${safeTitle}" class="article-stream-cover-img" loading="lazy">
+      `;
+    } else {
+      detailCoverEl.style.display = 'none';
+      detailCoverEl.innerHTML = '';
+    }
+  }
 
   // Title & Date
   const artTitle = document.getElementById('artTitle');
@@ -1611,6 +1635,8 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
     card.innerHTML = `
       ${coverImgSrc ? `
         <div class="article-stream-cover">
+          <div class="article-stream-cover-ambient" style="background-image: url(&quot;${coverImgSrc.replace(/"/g, '%22')}&quot;);"></div>
+          <div class="article-stream-cover-overlay"></div>
           <img src="${coverImgSrc}" alt="${titleText}" class="article-stream-cover-img" loading="lazy">
         </div>
       ` : ''}
@@ -1825,6 +1851,8 @@ function renderArchiveStream() {
     card.innerHTML = `
       ${coverImgSrc ? `
         <div class="article-stream-cover">
+          <div class="article-stream-cover-ambient" style="background-image: url(&quot;${coverImgSrc.replace(/"/g, '%22')}&quot;);"></div>
+          <div class="article-stream-cover-overlay"></div>
           <img src="${coverImgSrc}" alt="${titleText}" class="article-stream-cover-img" loading="lazy">
         </div>
       ` : ''}
