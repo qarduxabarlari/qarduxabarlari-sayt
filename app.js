@@ -2878,7 +2878,6 @@ ER  - `;
   function updateUserAuthState() {
     const rawUser = localStorage.getItem('qardu_user');
     const dict = I18N[currentLang] || I18N.uz;
-    const submitPaperBtn = document.getElementById('submitPaperBtn');
     const adminAddArticleBtn = document.getElementById('adminAddArticleBtn');
 
     if (rawUser) {
@@ -2891,7 +2890,6 @@ ER  - `;
           btnOpenAuthModal.setAttribute('hidden', '');
         }
         if (topAuthBtn) topAuthBtn.style.display = 'none';
-        if (submitPaperBtn) submitPaperBtn.style.display = 'inline-flex';
 
         // Show admin button and tabs only for admin email
         if (adminAddArticleBtn) {
@@ -2926,7 +2924,6 @@ ER  - `;
         }
       } catch (e) {
         localStorage.removeItem('qardu_user');
-        if (submitPaperBtn) submitPaperBtn.style.display = 'none';
         if (adminAddArticleBtn) adminAddArticleBtn.style.display = 'none';
         const btnAdminEditContacts = document.getElementById('btnAdminEditContacts');
         if (btnAdminEditContacts) btnAdminEditContacts.style.display = 'none';
@@ -2949,7 +2946,6 @@ ER  - `;
         btnOpenAuthModal.removeAttribute('hidden');
       }
       if (topAuthBtn) topAuthBtn.style.display = 'flex';
-      if (submitPaperBtn) submitPaperBtn.style.display = 'none';
       if (adminAddArticleBtn) adminAddArticleBtn.style.display = 'none';
       const btnAdminEditContacts = document.getElementById('btnAdminEditContacts');
       if (btnAdminEditContacts) btnAdminEditContacts.style.display = 'none';

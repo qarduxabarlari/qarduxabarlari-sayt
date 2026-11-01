@@ -368,28 +368,7 @@ a:hover {
   background: var(--color-accent-blue);
 }
 
-/* Submit Paper Button (Hidden by default, shown after login/register) */
-.btn-submit-paper {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  color: #ffffff;
-  padding: 9px 18px;
-  border-radius: 30px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  display: none;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 2px 8px rgba(18, 55, 101, 0.25);
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
 
-.btn-submit-paper:hover {
-  background: linear-gradient(135deg, var(--color-accent-teal) 0%, var(--color-primary) 100%);
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
-}
 
 .mobile-toggle {
   display: none;
@@ -1713,14 +1692,7 @@ a:hover {
     display: none;
   }
 
-  .btn-submit-paper span {
-    display: none;
-  }
 
-  .btn-submit-paper {
-    padding: 8px;
-    border-radius: 50%;
-  }
 
   .mobile-toggle {
     display: flex;
