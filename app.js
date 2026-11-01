@@ -1130,10 +1130,12 @@ function archiveArticle(articleId) {
   // Sync with Supabase if available
   if (window.supabaseClient) {
     try {
-      const cleanId = articleId.replace('art-sb-', '');
+      const idsToTry = [articleId];
+      if (articleId.startsWith('art-sb-')) idsToTry.push(articleId.replace('art-sb-', ''));
+      if (articleId.startsWith('art-db-')) idsToTry.push(articleId.replace('art-db-', ''));
       window.supabaseClient.from('articles')
         .update({ is_archived: true })
-        .eq('id', cleanId)
+        .in('id', idsToTry)
         .then(({ error }) => {
           if (error) console.warn("Supabase archive error:", error.message);
         })
@@ -1163,10 +1165,12 @@ function restoreArticle(articleId) {
 
   if (window.supabaseClient) {
     try {
-      const cleanId = articleId.replace('art-sb-', '');
+      const idsToTry = [articleId];
+      if (articleId.startsWith('art-sb-')) idsToTry.push(articleId.replace('art-sb-', ''));
+      if (articleId.startsWith('art-db-')) idsToTry.push(articleId.replace('art-db-', ''));
       window.supabaseClient.from('articles')
         .update({ is_archived: false })
-        .eq('id', cleanId)
+        .in('id', idsToTry)
         .then(({ error }) => {
           if (error) console.warn("Supabase restore error:", error.message);
         })
@@ -1205,10 +1209,12 @@ function deleteArticlePermanent(articleId) {
   // Remove from Supabase
   if (window.supabaseClient) {
     try {
-      const cleanId = articleId.replace('art-sb-', '');
+      const idsToTry = [articleId];
+      if (articleId.startsWith('art-sb-')) idsToTry.push(articleId.replace('art-sb-', ''));
+      if (articleId.startsWith('art-db-')) idsToTry.push(articleId.replace('art-db-', ''));
       window.supabaseClient.from('articles')
         .delete()
-        .eq('id', cleanId)
+        .in('id', idsToTry)
         .then(({ error }) => {
           if (error) console.warn("Supabase delete error:", error.message);
         })
@@ -1232,6 +1238,12 @@ function updateAdminTabBadges() {
 
   const archiveCountEl = document.getElementById('adminArchiveTabCount');
   if (archiveCountEl) archiveCountEl.textContent = `${archivedKeys.length}`;
+
+  const navArchiveBadge = document.getElementById('navArchiveBadge');
+  if (navArchiveBadge) navArchiveBadge.textContent = `${archivedKeys.length}`;
+
+  const archiveCountBadge = document.getElementById('archiveCountBadge');
+  if (archiveCountBadge) archiveCountBadge.textContent = `${archivedKeys.length} ta maqola`;
 }
 
 function renderAdminCarouselList() {
@@ -1695,6 +1707,205 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
         deleteArticlePermanent(key);
       });
     }
+
+    card.querySelector('.article-stream-title').addEventListener('click', () => {
+      showArticleDetailView(key);
+    });
+
+    card.querySelector('.btn-stream-read').addEventListener('click', () => {
+      showArticleDetailView(key);
+    });
+
+    card.querySelector('.btn-stream-pdf').addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentArticleId = key;
+      triggerPdfDownload();
+    });
+
+    card.querySelector('.btn-stream-cite').addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentArticleId = key;
+      const citeModal = document.getElementById('citeModal');
+      if (citeModal) {
+        updateCitationView();
+        citeModal.removeAttribute('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+
+    card.querySelector('.btn-stream-share').addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentArticleId = key;
+      const shareModal = document.getElementById('shareModal');
+      if (shareModal) {
+        shareModal.removeAttribute('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+
+    container.appendChild(card);
+  });
+}
+
+/**
+ * Render Archived Articles Stream in Archive View
+ */
+function renderArchiveStream() {
+  const container = document.getElementById('archiveStreamFeed');
+  const countBadge = document.getElementById('archiveCountBadge');
+  const navArchiveBadge = document.getElementById('navArchiveBadge');
+  if (!container) return;
+
+  const dict = I18N[currentLang] || I18N.uz;
+  const archivedKeys = Object.keys(ARTICLES).filter(key => ARTICLES[key] && ARTICLES[key].isArchived);
+
+  if (countBadge) {
+    countBadge.textContent = `${archivedKeys.length} ${dict.articlesCount || 'ta maqola'}`;
+  }
+  if (navArchiveBadge) {
+    navArchiveBadge.textContent = `${archivedKeys.length}`;
+  }
+
+  container.innerHTML = '';
+
+  if (!archivedKeys.length) {
+    const emptyBox = document.createElement('div');
+    emptyBox.className = 'empty-notice-card';
+    emptyBox.style.margin = '20px 0';
+    emptyBox.innerHTML = `
+      <div class="empty-notice-icon">📦</div>
+      <h3 class="empty-notice-title">${dict.noArchivedTitle || "Arxivlangan maqolalar mavjud emas"}</h3>
+      <p class="empty-notice-desc">${dict.noArchivedDesc || "Ushbu bo'lim faqat admin uchun ochiq. Maqolalarni arxivlasangiz, ular umumiy nashrlar oqimidan olinib, bu yerda xavfsiz saqlanadi va istalgan paytda qayta tiklash mumkin."}</p>
+    `;
+    container.appendChild(emptyBox);
+    return;
+  }
+
+  archivedKeys.forEach(key => {
+    const art = ARTICLES[key];
+    const catText = (art.category && (art.category[currentLang] || art.category.uz)) || 'Ilmiy maqola';
+    const titleText = (art.title && (art.title[currentLang] || art.title.uz)) || '';
+    const authorText = (art.passport && art.passport.authorsText) || '';
+    const issueText = (art.issue && (art.issue[currentLang] || art.issue.uz)) || '';
+    const pubYearText = (art.passport && art.passport.pubYear) ? `${art.passport.pubYear}-yil` : '';
+    const doiText = (art.passport && art.passport.doi) || '';
+    const abstractText = (art.abstract && (art.abstract[currentLang] || art.abstract.uz)) || '';
+    const kwList = (art.keywords && (art.keywords[currentLang] || art.keywords.uz)) || [];
+
+    const coverImgSrc = art.coverImage || art.slideImage || null;
+    const card = document.createElement('article');
+    card.className = `article-stream-card ${coverImgSrc ? 'article-stream-card--has-cover' : ''}`;
+    card.innerHTML = `
+      ${coverImgSrc ? `
+        <div class="article-stream-cover">
+          <img src="${coverImgSrc}" alt="${titleText}" class="article-stream-cover-img" loading="lazy">
+        </div>
+      ` : ''}
+      <div class="article-stream-meta-row">
+        <span class="article-stream-category-badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 700;">📦 Arxivlangan</span>
+        <span class="article-stream-category-badge">${catText}</span>
+        <span class="article-stream-issue-pill">${issueText}</span>
+        <span>•</span>
+        <span>${pubYearText}</span>
+        ${doiText ? `<span>•</span><span class="article-stream-doi">DOI: ${doiText.replace('https://doi.org/', '')}</span>` : ''}
+      </div>
+
+      <h3 class="article-stream-title" style="cursor: pointer;">${titleText}</h3>
+
+      <div class="article-stream-authors-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>${authorText} — Qarshi Davlat Universiteti</span>
+      </div>
+
+      <p class="article-stream-abstract">${abstractText}</p>
+
+      ${kwList.length ? `
+        <div class="article-stream-keywords">
+          <span class="article-stream-kw-label">${dict.keywordsLabel || 'Kalit so\'zlar'}:</span>
+          ${kwList.map(kw => `<span class="article-stream-kw-tag">${kw}</span>`).join('')}
+        </div>
+      ` : ''}
+
+      <div class="article-stream-actions">
+        <div class="article-stream-actions-left">
+          <button type="button" class="btn-stream-read" data-id="${key}">
+            <span>${dict.btnReadArticle || "Maqolani o'qish"}</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+          <button type="button" class="btn-stream-pdf" data-id="${key}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>${dict.btnDownloadPdf || "PDF yuklab olish"}</span>
+          </button>
+        </div>
+
+        <div class="article-stream-actions-right">
+          <button type="button" class="btn-stream-tool btn-stream-cite" data-id="${key}" title="${dict.citeBtn || 'Iqtibos'}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+              <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+            </svg>
+            <span>${dict.btnQuickCite || "Iqtibos"}</span>
+          </button>
+          <button type="button" class="btn-stream-tool btn-stream-share" data-id="${key}" title="${dict.shareBtn || 'Ulashish'}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span>${dict.btnQuickShare || "Ulashish"}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="article-stream-admin-bar">
+        <div class="article-stream-admin-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="21 8 21 21 3 21 3 8"></polyline>
+            <rect x="1" y="3" width="22" height="5"></rect>
+            <line x1="10" y1="12" x2="14" y2="12"></line>
+          </svg>
+          <span>Arxiv boshqaruvi:</span>
+        </div>
+        <div class="article-stream-admin-buttons">
+          <button type="button" class="btn-card-admin btn-card-restore" data-id="${key}" title="Maqolani arxivdan chiqarish va yana saytda faol ko'rsatish">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            <span>Arxivdan chiqarish</span>
+          </button>
+          <button type="button" class="btn-card-admin btn-card-delete" data-id="${key}" title="Maqolani butunlay o'chirib tashlash">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Butunlay o'chirish</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector('.btn-card-restore')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      restoreArticle(key);
+    });
+
+    card.querySelector('.btn-card-delete')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteArticlePermanent(key);
+    });
 
     card.querySelector('.article-stream-title').addEventListener('click', () => {
       showArticleDetailView(key);
@@ -3734,10 +3945,7 @@ ER  - `;
 
   // Helper to detect test articles
   function isTestArticle(item) {
-    if (!item) return false;
-    const d = ((item.passport && item.passport.doi) || item.doi || '').toLowerCase();
-    const a = ((item.abstract && (item.abstract.uz || item.abstract)) || '').toLowerCase();
-    return d.includes('cewrcwec') || a.includes('weecwecwe');
+    return false;
   }
 
   // Load custom stored articles from localStorage and Supabase
@@ -3794,10 +4002,18 @@ ER  - `;
             const kw = Array.isArray(row.keywords) ? row.keywords : (row.keywords_uz || (row.keywords ? String(row.keywords).split(',').map(s => s.trim()) : []));
             const y = row.pub_year || new Date().getFullYear();
 
+            let catKey = 'tech';
+            const combinedText = `${artTitle} ${row.article_type || ''} ${artAbstract}`.toLowerCase();
+            if (combinedText.includes('tabiiy') || combinedText.includes('ekolog') || combinedText.includes('kimyo') || combinedText.includes('biolog')) catKey = 'nat';
+            else if (combinedText.includes('iqtisod') || combinedText.includes('biznes') || combinedText.includes('moliya')) catKey = 'econ';
+            else if (combinedText.includes('tarix') || combinedText.includes('filolog') || combinedText.includes('til') || combinedText.includes('adabiyot')) catKey = 'hist';
+            else catKey = 'tech';
+
             ARTICLES[rowId] = {
               id: rowId,
               isArchived: !!row.is_archived,
-              category: { uz: row.article_type || 'Ilmiy maqola', ru: row.article_type || 'Научная статья', en: row.article_type || 'Research Article' },
+              categoryKey: row.category_key || catKey,
+              category: { uz: row.article_type || 'Axborot texnologiyalari va AI', ru: row.article_type || 'Информационные технологии и ИИ', en: row.article_type || 'IT and AI' },
               title: { uz: artTitle, ru: artTitle, en: artTitle },
               pubDate: { uz: `${y}-yil`, ru: `${y} г.`, en: `${y}` },
               issue: { uz: `${y}-yil, ${row.vol_issue || '2-son'}`, ru: `${y} г., ${row.vol_issue || '2-й выпуск'}`, en: `${y}, ${row.vol_issue || 'Issue 2'}` },
