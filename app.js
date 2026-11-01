@@ -1080,26 +1080,17 @@ function isAdminLoggedIn() {
 }
 
 function getCarouselArticleKeys() {
-  let saved = null;
-  try {
-    saved = JSON.parse(localStorage.getItem('qardu_carousel_articles') || 'null');
-  } catch (e) {}
-
-  if (Array.isArray(saved) && saved.length > 0) {
-    const valid = saved.filter(id => ARTICLES[id] && !ARTICLES[id].isArchived);
-    if (valid.length > 0) {
-      return valid.slice(0, 10);
-    }
+  const raw = localStorage.getItem('qardu_carousel_articles');
+  if (raw !== null) {
+    try {
+      const saved = JSON.parse(raw);
+      if (Array.isArray(saved)) {
+        return saved.filter(id => ARTICLES[id] && !ARTICLES[id].isArchived).slice(0, 10);
+      }
+    } catch (e) {}
   }
 
-  // Fallback default: up to 10 non-archived articles
-  const defaultKeys = Object.keys(ARTICLES)
-    .filter(id => ARTICLES[id] && !ARTICLES[id].isArchived)
-    .slice(0, 10);
-  try {
-    localStorage.setItem('qardu_carousel_articles', JSON.stringify(defaultKeys));
-  } catch (e) {}
-  return defaultKeys;
+  return [];
 }
 
 function setCarouselArticleKeys(keys) {
