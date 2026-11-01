@@ -1023,7 +1023,7 @@ function renderArticle() {
   // Share URL input
   const shareInput = document.getElementById('shareUrlInput');
   if (shareInput) {
-    shareInput.value = `${window.location.origin}/articles/${article.id}`;
+    shareInput.value = `${window.location.origin}/?article=${encodeURIComponent(article.id)}`;
   }
 
   // Update PDF modal content as well
@@ -1489,6 +1489,38 @@ function stopCarouselAutoPlay() {
 }
 
 /**
+ * Open Share Modal for specific article and sync share input / native share button
+ */
+function openShareModalForArticle(articleId) {
+  if (articleId && ARTICLES[articleId]) {
+    currentArticleId = articleId;
+  }
+  const article = getCurrentArticle();
+  if (!article) return;
+
+  const shareUrl = `${window.location.origin}/?article=${encodeURIComponent(article.id)}`;
+  const shareInput = document.getElementById('shareUrlInput');
+  if (shareInput) {
+    shareInput.value = shareUrl;
+  }
+
+  const btnShareNative = document.getElementById('shareNative');
+  if (btnShareNative) {
+    if (navigator.share) {
+      btnShareNative.style.display = 'inline-flex';
+    } else {
+      btnShareNative.style.display = 'none';
+    }
+  }
+
+  const shareModal = document.getElementById('shareModal');
+  if (shareModal) {
+    shareModal.removeAttribute('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+/**
  * Render Sequential Articles Stream ("Ketma-ket chiqib turishi")
  */
 function renderArticlesStream(category = activeStreamCategory, searchQuery = currentStreamSearch) {
@@ -1735,12 +1767,7 @@ function renderArticlesStream(category = activeStreamCategory, searchQuery = cur
 
     card.querySelector('.btn-stream-share').addEventListener('click', (e) => {
       e.stopPropagation();
-      currentArticleId = key;
-      const shareModal = document.getElementById('shareModal');
-      if (shareModal) {
-        shareModal.removeAttribute('hidden');
-        document.body.style.overflow = 'hidden';
-      }
+      openShareModalForArticle(key);
     });
 
     container.appendChild(card);
@@ -1934,12 +1961,7 @@ function renderArchiveStream() {
 
     card.querySelector('.btn-stream-share').addEventListener('click', (e) => {
       e.stopPropagation();
-      currentArticleId = key;
-      const shareModal = document.getElementById('shareModal');
-      if (shareModal) {
-        shareModal.removeAttribute('hidden');
-        document.body.style.overflow = 'hidden';
-      }
+      openShareModalForArticle(key);
     });
 
     container.appendChild(card);
@@ -2609,10 +2631,9 @@ ER  - `;
   const shareModal = document.getElementById('shareModal');
   const btnCloseShareModal = document.getElementById('btnCloseShareModal');
 
-  if (btnOpenShareModal && shareModal) {
+  if (btnOpenShareModal) {
     btnOpenShareModal.addEventListener('click', () => {
-      shareModal.removeAttribute('hidden');
-      document.body.style.overflow = 'hidden';
+      openShareModalForArticle(currentArticleId);
     });
   }
 
@@ -2630,7 +2651,7 @@ ER  - `;
       const shareUrl = document.getElementById('shareUrlInput').value;
       navigator.clipboard.writeText(shareUrl).then(() => {
         const dict = I18N[currentLang] || I18N.uz;
-        showToast(dict.toastCopySuccess);
+        showToast(dict.toastCopySuccess || "Havola nusxalandi!");
       });
     });
   }
@@ -2641,13 +2662,36 @@ ER  - `;
     if (!article) {
       return {
         url: encodeURIComponent(window.location.origin),
-        title: encodeURIComponent("QarDU Xabarlari ilmiy jurnali")
+        rawUrl: window.location.origin,
+        title: encodeURIComponent("QarDU Xabarlari ilmiy jurnali"),
+        rawTitle: "QarDU Xabarlari ilmiy jurnali"
       };
     }
-    const url = encodeURIComponent(`${window.location.origin}/articles/${article.id}`);
-    const title = encodeURIComponent((article.title && (article.title[currentLang] || article.title.uz)) || "QarDU Xabarlari");
-    return { url, title };
+    const rawUrl = `${window.location.origin}/?article=${encodeURIComponent(article.id)}`;
+    const rawTitle = (article.title && (article.title[currentLang] || article.title.uz)) || "QarDU Xabarlari";
+    return {
+      url: encodeURIComponent(rawUrl),
+      rawUrl: rawUrl,
+      title: encodeURIComponent(rawTitle),
+      rawTitle: rawTitle
+    };
   }
+
+  // Native mobile share button (Web Share API)
+  document.getElementById('shareNative')?.addEventListener('click', async () => {
+    const data = getShareData();
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: data.rawTitle,
+          text: data.rawTitle,
+          url: data.rawUrl
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') console.warn("Native share error:", err);
+      }
+    }
+  });
 
   document.getElementById('shareTg')?.addEventListener('click', () => {
     const { url, title } = getShareData();
@@ -4060,7 +4104,41 @@ ER  - `;
     updateAdminTabBadges();
   }
 
+  function extractArticleIdFromUrl() {
+    // 1. Check query parameter: ?article=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const qArticle = urlParams.get('article');
+    if (qArticle) return qArticle.trim();
+
+    // 2. Check path: /articles/:id or /article/:id
+    const path = window.location.pathname;
+    const pathMatch = path.match(/^\/(?:articles|article)\/([^/?#]+)/i);
+    if (pathMatch && pathMatch[1]) {
+      return decodeURIComponent(pathMatch[1]).trim();
+    }
+
+    // 3. Check hash: #article/... or #articles/... or #article-...
+    const hash = window.location.hash;
+    const hashMatch = hash.match(/^#(?:article|articles)[/-](.+)/i);
+    if (hashMatch && hashMatch[1]) {
+      return decodeURIComponent(hashMatch[1]).trim();
+    }
+
+    return null;
+  }
+
   function checkHashRoute() {
+    // Priority: Direct Article deep link (?article=..., /articles/..., #article/...)
+    const targetArticleId = extractArticleIdFromUrl();
+    if (targetArticleId) {
+      if (ARTICLES[targetArticleId]) {
+        showArticleDetailView(targetArticleId);
+        return;
+      } else {
+        console.warn("Requested article not found in articles:", targetArticleId);
+      }
+    }
+
     const hash = window.location.hash;
     if (hash === '#admin') {
       if (isAdminLoggedIn()) {
@@ -4076,7 +4154,9 @@ ER  - `;
     } else if (hash === '#contacts' || hash === '#contact-settings') {
       showContactsView();
     } else if (hash === '#home' || !hash || hash === '') {
-      showHomeView();
+      if (!targetArticleId) {
+        showHomeView();
+      }
     }
   }
 
@@ -4093,6 +4173,9 @@ ER  - `;
   });
 
   window.addEventListener('hashchange', () => {
+    checkHashRoute();
+  });
+  window.addEventListener('popstate', () => {
     checkHashRoute();
   });
 });
